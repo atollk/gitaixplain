@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { goto } from "$app/navigation"
-	import type { Model } from "$lib/models"
+	import { type Model, modelsList } from "$lib/models"
 
 	const props: {
 		initialUrl: string;
@@ -9,10 +9,8 @@
 	} = $props()
 
 	let githubUrl = $state(props.initialUrl)
-	let selectedModel = $state<Model>(props.initialModel ?? "ChatGpt")
+	let selectedModel = $state<Model>(props.initialModel ?? modelsList[0])
 	let apiKey = $state(props.initialApiKey)
-
-	const models: Model[] = ["ChatGpt", "Claude", "Gemini"]
 
 	function handleSubmit(e: SubmitEvent): void {
 		e.preventDefault()
@@ -49,7 +47,7 @@
 			bind:value={selectedModel}
 			class="select select-bordered w-40"
 		>
-			{#each models as model}
+			{#each modelsList as model}
 				<option value={model}>{model}</option>
 			{/each}
 		</select>

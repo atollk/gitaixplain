@@ -3,10 +3,11 @@
 	import Header from "$lib/components/Header.svelte"
 	import GitForm from "$lib/components/GitForm.svelte"
 	import Aixplanation from "$lib/components/Aixplanation.svelte"
+	import { modelsList } from "$lib/models"
 
 	const { owner, repo } = page.params
 	const urlParams = page.url.searchParams
-	const model = urlParams.get("model") ?? ""
+	const model = urlParams.get("model") ?? modelsList[0]
 	const apiKey = urlParams.get("apiKey") ?? ""
 </script>
 

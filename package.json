@@ -37,9 +37,11 @@
   },
   "dependencies": {
     "@langchain/core": "^0.3.27",
+    "@langchain/google-genai": "^0.1.6",
     "@langchain/google-vertexai": "^0.1.6",
     "@langchain/openai": "^0.3.16",
     "@sveltejs/adapter-static": "^3.0.8",
+    "@viz-js/viz": "^3.11.0",
     "langchain": "^0.3.10",
     "vite-plugin-node-polyfills": "^0.22.0"
   }

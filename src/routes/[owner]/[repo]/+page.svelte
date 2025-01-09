@@ -1,30 +1,43 @@
 <script lang="ts">
-	import { page } from "$app/state"
-	import Header from "$lib/components/Header.svelte"
-	import GitForm from "$lib/components/GitForm.svelte"
-	import Aixplanation from "$lib/components/Aixplanation.svelte"
-	import { modelsList } from "$lib/models"
+    import { page } from "$app/state"
+    import Header from "$lib/components/Header.svelte"
+    import GitForm from "$lib/components/GitForm.svelte"
+    import Aixplanation from "$lib/components/Aixplanation.svelte"
+    import { modelsList } from "$lib/models"
+    import { fetchRepoSummary } from "$lib/backend"
+    import { onMount } from "svelte"
+    import Loading from "$lib/components/Loading.svelte"
+    import GeminiExplain from "$lib/components/GeminiExplain.svelte"
 
-	const { owner, repo } = page.params
-	const urlParams = page.url.searchParams
-	const model = urlParams.get("model") ?? modelsList[0]
-	const apiKey = urlParams.get("apiKey") ?? ""
+    const { owner, repo } = page.params
+    const urlParams = page.url.searchParams
+    const model = urlParams.get("model") ?? modelsList[0]
+    const apiKey = urlParams.get("apiKey") ?? ""
+
+    let repoSummary = $state("")
+
+    async function getContent(): Promise<void> {
+        repoSummary = await fetchRepoSummary(`https://github.com/${owner}/${repo}`)
+    }
+
+    onMount(async () => await getContent())
 </script>
 
-<main class="container mx-auto max-w-2xl px-4 py-8">
-	<Header />
-	<GitForm
-		initialUrl={`https://github.com/${owner}/${repo}`}
-		initialModel={model}
-		initialApiKey={apiKey}
-	/>
+<main class="container mx-auto flex max-w-6xl flex-col items-center px-4 py-8">
+    <Header />
+    <GitForm
+        initialUrl={`https://github.com/${owner}/${repo}`}
+        initialModel={model}
+        initialApiKey={apiKey}
+    />
 
-	<div class="divider my-8"></div>
+    <div class="divider my-8"></div>
 
-	<Aixplanation
-		owner={owner}
-		repo={repo}
-		model={model}
-		apiKey={apiKey}
-	/>
+    {#if repoSummary === ""}
+        <Loading message="Loading your repository" />
+    {:else if model === "Gemini"}
+        <GeminiExplain {apiKey} {repoSummary} />
+    {:else}
+        Error: Model {model} not found.
+    {/if}
 </main>

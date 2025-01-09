@@ -1,64 +1,61 @@
 <script lang="ts">
-	import { goto } from "$app/navigation"
-	import { type Model, modelsList } from "$lib/models"
+    import { goto } from "$app/navigation"
+    import { type Model, modelsList } from "$lib/models"
 
-	const props: {
-		initialUrl: string;
-		initialModel?: Model;
-		initialApiKey: string;
-	} = $props()
+    const props: {
+        initialUrl: string
+        initialModel?: Model
+        initialApiKey: string
+    } = $props()
 
-	let githubUrl = $state(props.initialUrl)
-	let selectedModel = $state<Model>(props.initialModel ?? modelsList[0])
-	let apiKey = $state(props.initialApiKey)
+    let githubUrl = $state(props.initialUrl)
+    let selectedModel = $state<Model>(props.initialModel ?? modelsList[0])
+    let apiKey = $state(props.initialApiKey)
 
-	function handleSubmit(e: SubmitEvent): void {
-		e.preventDefault()
-		const urlPattern = /^(?:https:\/\/)?github\.com\/([^\/]+)\/([^\/]+)/
-		const match = githubUrl.match(urlPattern)
+    function handleSubmit(e: SubmitEvent): void {
+        e.preventDefault()
+        const urlPattern = /^(?:https:\/\/)?github\.com\/([^\/]+)\/([^\/]+)/
+        const match = githubUrl.match(urlPattern)
 
-		if (!match) {
-			alert("Please enter a valid GitHub repository URL")
-			return
-		}
+        if (!match) {
+            alert("Please enter a valid GitHub repository URL")
+            return
+        }
 
-		const [, owner, repo] = match
-		const queryParams = new URLSearchParams({
-			model: selectedModel,
-			apiKey,
-		})
+        const [, owner, repo] = match
+        const queryParams = new URLSearchParams({
+            model: selectedModel,
+            apiKey,
+        })
 
-		goto(`/${owner}/${repo}?${queryParams}`)
-	}
+        goto(`/${owner}/${repo}?${queryParams}`)
+    }
 </script>
 
-<form onsubmit={(e) => handleSubmit(e)} class="flex flex-col gap-6">
-	<div class="form-control w-full">
-		<input
-			bind:value={githubUrl}
-			placeholder="Enter GitHub repository URL"
-			class="input input-bordered w-full"
-			required
-		/>
-	</div>
+<form onsubmit={(e) => handleSubmit(e)} class="flex max-w-2xl flex-col gap-6">
+    <div class="form-control w-full">
+        <input
+            bind:value={githubUrl}
+            placeholder="Enter GitHub repository URL"
+            class="input input-bordered w-full"
+            required
+        />
+    </div>
 
-	<div class="flex gap-4">
-		<select
-			bind:value={selectedModel}
-			class="select select-bordered w-40"
-		>
-			{#each modelsList as model}
-				<option value={model}>{model}</option>
-			{/each}
-		</select>
+    <div class="flex gap-4">
+        <select bind:value={selectedModel} class="select select-bordered w-40">
+            {#each modelsList as model}
+                <option value={model}>{model}</option>
+            {/each}
+        </select>
 
-		<input
-			bind:value={apiKey}
-			placeholder="Enter API Key"
-			class="input input-bordered flex-1"
-			required
-		/>
-	</div>
+        <input
+            bind:value={apiKey}
+            placeholder="Enter API Key"
+            class="input input-bordered flex-1"
+            required
+        />
+    </div>
 
-	<button type="submit" class="btn btn-primary w-full">Submit</button>
+    <button type="submit" class="btn btn-primary w-full">Submit</button>
 </form>

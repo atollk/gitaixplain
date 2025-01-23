@@ -45,8 +45,11 @@
     "@mlc-ai/web-llm": "^0.2.77",
     "@sveltejs/adapter-static": "^3.0.8",
     "@viz-js/viz": "^3.11.0",
+    "colorjs.io": "^0.5.2",
     "langchain": "^0.3.10",
     "marked": "^15.0.6",
+    "mermaid": "^11.4.1",
+    "panzoom": "^9.4.3",
     "vite-plugin-node-polyfills": "^0.22.0"
   }
 }

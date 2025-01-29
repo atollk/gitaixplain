@@ -4,17 +4,17 @@
     import GitForm from "$lib/components/GitForm.svelte"
     import Aixplanation from "$lib/components/Aixplanation.svelte"
     import { modelsList } from "$lib/models"
-    import { fetchRepoSummary } from "$lib/backend"
     import { onMount } from "svelte"
     import Loading from "$lib/components/Loading.svelte"
     import GeminiExplain from "$lib/components/GeminiExplain.svelte"
+    import { fetchRepoSummary } from "$lib/backend/backend"
 
     const { owner, repo } = page.params
     const urlParams = page.url.searchParams
     const model = urlParams.get("model") ?? modelsList[0]
     const apiKey = urlParams.get("apiKey") ?? ""
 
-    let repoSummary = $state("")
+    let repoSummary = $state<XMLDocument>()
 
     async function getContent(): Promise<void> {
         repoSummary = await fetchRepoSummary(`https://github.com/${owner}/${repo}`)
@@ -33,7 +33,7 @@
 
     <div class="divider my-8"></div>
 
-    {#if repoSummary === ""}
+    {#if repoSummary === undefined}
         <Loading message="Loading your repository" />
     {:else if model === "Gemini"}
         <GeminiExplain {apiKey} {repoSummary} />

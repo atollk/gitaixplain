@@ -1,7 +1,8 @@
 <script lang="ts">
     import Loading from "$lib/components/Loading.svelte"
-    import { type AiResponse, Gemini, initMermaid } from "$lib/backend"
     import MermaidRender from "$lib/components/MermaidRender.svelte"
+    import { Gemini } from "$lib/backend/langchain_backend"
+    import type { AiResponse } from "$lib/backend/ai_backend"
 
     let props: {
         apiKey: string
@@ -9,7 +10,7 @@
     } = $props()
 
     const model = new Gemini(props.apiKey)
-    const modelResponse: Promise<AiResponse> = $state(model.analyze(props.repoSummary))
+    const modelResponse = $state<Promise<AiResponse>>(model.analyze(props.repoSummary))
 </script>
 
 {#await modelResponse}

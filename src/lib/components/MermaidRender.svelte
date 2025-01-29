@@ -1,8 +1,8 @@
 <script lang="ts">
     import mermaid from "mermaid"
     import { onMount } from "svelte"
-    import { initMermaid } from "$lib/backend"
     import createPanZoom from "panzoom"
+    import { initMermaid } from "$lib/backend/mermaid_backend"
 
     const props: {
         svgId: string,

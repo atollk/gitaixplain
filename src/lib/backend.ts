@@ -40,8 +40,6 @@ export async function renderGraphviz(code: string | undefined): Promise<SVGEleme
 export interface AiResponse {
     summary?: {
         purpose?: string
-        techStack?: string
-        architectureStyle?: string
     }
     componentAnalysis?: {
         flowGraph?: string
@@ -103,8 +101,6 @@ Analyze the following Git repository XML data and generate a structured analysis
 {
   "summary": {
     "purpose": "Single paragraph describing the project's core purpose",
-    "techStack": ["Array of main technologies used"],
-    "architectureStyle": "Main architectural pattern (e.g. microservices, monolith)",
   },
   "componentAnalysis": {
     "flowGraph": "Mermaid diagram code showing key components and their interactions",

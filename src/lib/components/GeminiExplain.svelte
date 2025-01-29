@@ -18,7 +18,9 @@
     />
 {:then modelResponse}
     <div class="flex max-w-[inherit] flex-col items-center justify-center">
-        {modelResponse?.summary?.purpose}
+        <p>
+            {modelResponse?.summary?.purpose}
+        </p>
 
         <div class="divider my-8"></div>
 

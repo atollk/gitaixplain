@@ -1,16 +1,15 @@
 <script lang="ts">
     import Loading from "$lib/components/Loading.svelte"
     import MermaidRender from "$lib/components/MermaidRender.svelte"
-    import { Gemini } from "$lib/backend/langchain_backend"
     import type { AiResponse } from "$lib/backend/ai_backend"
+    import type { LangchainBaseInterface } from "$lib/backend/langchain_backend"
 
     let props: {
-        apiKey: string
-        repoSummary: XMLDocument
+        interface: LangchainBaseInterface<unknown>,
+        repoSummary: XMLDocument,
     } = $props()
 
-    const model = new Gemini(props.apiKey)
-    const modelResponse = $state<Promise<AiResponse>>(model.analyze(props.repoSummary))
+    const modelResponse = $state<Promise<AiResponse>>(props.interface.analyze(props.repoSummary))
 </script>
 
 {#await modelResponse}

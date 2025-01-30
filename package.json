@@ -38,9 +38,10 @@
   },
   "dependencies": {
     "@huggingface/transformers": "^3.2.4",
-    "@langchain/core": "^0.3.27",
-    "@langchain/google-genai": "^0.1.6",
+    "@langchain/core": "^0.3.37",
+    "@langchain/google-genai": "^0.1.7",
     "@langchain/google-vertexai": "^0.1.6",
+    "@langchain/ollama": "^0.1.5",
     "@langchain/openai": "^0.3.16",
     "@mlc-ai/web-llm": "^0.2.77",
     "@sveltejs/adapter-static": "^3.0.8",

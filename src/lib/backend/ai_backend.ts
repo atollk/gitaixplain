@@ -27,8 +27,6 @@ export interface AiResponse {
 export abstract class AiInterface {
     abstract analyze(repoSummary: XMLDocument): Promise<AiResponse>
 
-    abstract requestKeyFileInfo(keyFile: string, repoSummary: XMLDocument): Promise<string>
-
     protected xmlToString(xml: XMLDocument): string {
         return new XMLSerializer().serializeToString(xml)
     }

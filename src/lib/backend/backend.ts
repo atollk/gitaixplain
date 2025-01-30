@@ -1,5 +1,5 @@
 export async function fetchRepoSummary(url: string): Promise<XMLDocument> {
-    return Promise.resolve(new DOMParser().parseFromString("<foo></foo>", "application/xml"))
+    // return Promise.resolve(new DOMParser().parseFromString("<foo></foo>", "application/xml"))
     const apiUrl = "https://api.repomix.com/api/pack"
     const requestBody = JSON.stringify({
         format: "xml",

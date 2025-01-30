@@ -2,12 +2,12 @@
     import { page } from "$app/state"
     import Header from "$lib/components/Header.svelte"
     import GitForm from "$lib/components/GitForm.svelte"
-    import Aixplanation from "$lib/components/Aixplanation.svelte"
     import { modelsList } from "$lib/models"
     import { onMount } from "svelte"
     import Loading from "$lib/components/Loading.svelte"
-    import GeminiExplain from "$lib/components/GeminiExplain.svelte"
+    import LangchainExplain from "$lib/components/LangchainExplain.svelte"
     import { fetchRepoSummary } from "$lib/backend/backend"
+    import { GeminiInterface, OllamaInterface } from "$lib/backend/langchain_implementations"
 
     const { owner, repo } = page.params
     const urlParams = page.url.searchParams
@@ -36,7 +36,9 @@
     {#if repoSummary === undefined}
         <Loading message="Loading your repository" />
     {:else if model === "Gemini"}
-        <GeminiExplain {apiKey} {repoSummary} />
+        <LangchainExplain interface={new GeminiInterface(apiKey)} {repoSummary} />
+    {:else if model === "Ollama"}
+        <LangchainExplain interface={new OllamaInterface()} {repoSummary} />
     {:else}
         Error: Model {model} not found.
     {/if}

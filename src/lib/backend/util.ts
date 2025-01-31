@@ -1,3 +1,5 @@
+import { get_encoding, encoding_for_model } from "tiktoken"
+
 export async function fetchRepoSummary(url: string): Promise<XMLDocument> {
     // return Promise.resolve(new DOMParser().parseFromString("<foo></foo>", "application/xml"))
     const apiUrl = "https://api.repomix.com/api/pack"
@@ -28,4 +30,13 @@ export async function fetchRepoSummary(url: string): Promise<XMLDocument> {
 export function stripBackticks(s: string, code: string): string {
     const regex = new RegExp(`^\\s*\`\`\`${code}(.+)\`\`\`\\s*$`, "s")
     return s.replace(regex, "$1")
+}
+
+export function countTokens(content: string): number {
+    const encoder = get_encoding("o200k_base")
+    try {
+        return encoder.encode_ordinary(content).length
+    } finally {
+        encoder.free()
+    }
 }

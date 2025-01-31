@@ -6,8 +6,8 @@
     import { onMount } from "svelte"
     import Loading from "$lib/components/Loading.svelte"
     import LangchainExplain from "$lib/components/LangchainExplain.svelte"
-    import { fetchRepoSummary } from "$lib/backend/backend"
-    import { GeminiInterface, OllamaInterface } from "$lib/backend/langchain_implementations"
+    import { fetchRepoSummary } from "$lib/backend/util"
+    import { geminiInterface, ollamaInterface } from "$lib/backend/langchain_implementations"
 
     const { owner, repo } = page.params
     const urlParams = page.url.searchParams
@@ -36,9 +36,9 @@
     {#if repoSummary === undefined}
         <Loading message="Loading your repository" />
     {:else if model === "Gemini"}
-        <LangchainExplain interface={new GeminiInterface(apiKey)} {repoSummary} />
+        <LangchainExplain interface={geminiInterface(apiKey)} {repoSummary} />
     {:else if model === "Ollama"}
-        <LangchainExplain interface={new OllamaInterface()} {repoSummary} />
+        <LangchainExplain interface={ollamaInterface()} {repoSummary} />
     {:else}
         Error: Model {model} not found.
     {/if}

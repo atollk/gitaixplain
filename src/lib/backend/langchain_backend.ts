@@ -1,13 +1,14 @@
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai"
 import { HumanMessage, SystemMessage } from "@langchain/core/messages"
 import { AiInterface, type AiResponse } from "$lib/backend/ai_backend"
-import { stripBackticks } from "$lib/backend/backend"
+import { stripBackticks } from "$lib/backend/util"
 import { BaseChatModel } from "@langchain/core/language_models/chat_models"
 
 export class LangchainBaseInterface<ModelConfig> extends AiInterface {
     constructor(
         protected readonly model: BaseChatModel,
         protected readonly modelConfig: ModelConfig,
+        readonly contextWindowSize: number,
     ) {
         super()
     }

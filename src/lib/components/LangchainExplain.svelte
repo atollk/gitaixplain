@@ -3,6 +3,7 @@
     import MermaidRender from "$lib/components/MermaidRender.svelte"
     import type { AiResponse } from "$lib/backend/ai_backend"
     import type { LangchainBaseInterface } from "$lib/backend/langchain_backend"
+    import { countTokens } from "$lib/backend/util"
 
     let props: {
         interface: LangchainBaseInterface<unknown>,
@@ -16,6 +17,7 @@
     <Loading
         message="Summarizing the repository. This might take a while, depending on the size."
     />
+    <p>{countTokens(new XMLSerializer().serializeToString(props.repoSummary))}</p>
 {:then modelResponse}
     <div class="flex max-w-[inherit] flex-col items-center justify-center">
         <p>

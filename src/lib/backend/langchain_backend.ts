@@ -1,20 +1,17 @@
-import { ChatGoogleGenerativeAI } from "@langchain/google-genai"
 import { HumanMessage, SystemMessage } from "@langchain/core/messages"
 import { AiInterface, type AiResponse } from "$lib/backend/ai_backend"
 import { stripBackticks } from "$lib/backend/util"
 import { BaseChatModel } from "@langchain/core/language_models/chat_models"
 
-export class LangchainBaseInterface<ModelConfig> extends AiInterface {
-    constructor(
-        protected readonly model: BaseChatModel,
-        protected readonly modelConfig: ModelConfig,
-        readonly contextWindowSize: number,
-    ) {
+export abstract class LangchainBaseInterface<Config> extends AiInterface<Config> {
+    private model?: BaseChatModel
+
+    protected constructor(protected readonly modelGen: () => BaseChatModel) {
         super()
     }
 
     async analyze(repoSummary: XMLDocument): Promise<AiResponse> {
-        console.log(this.xmlToString(repoSummary))
+        return Promise.resolve({})
         const messages = [
             new SystemMessage(
                 `
@@ -59,7 +56,10 @@ XML data follows:
             new HumanMessage(this.xmlToString(repoSummary)),
         ]
 
-        const response = await this.model.invoke(messages)
+        const model = this.model ?? this.modelGen()
+        this.model = model
+
+        const response = await model.invoke(messages)
         let responseContent = response.content as string
         responseContent = stripBackticks(responseContent, "json")
         const parsedResponse: AiResponse = JSON.parse(responseContent)

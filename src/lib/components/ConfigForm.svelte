@@ -1,16 +1,17 @@
 <script lang="ts">
     import { goto } from "$app/navigation"
-    import { type Model, modelsList } from "$lib/models"
+    import { type ModelName, modelsList } from "$lib/models"
+    import type { AiInterface } from "$lib/backend/ai_backend"
+    import { getSnippetFromModelName } from "$lib/components/ModelConfigSnippets.svelte"
 
-    const props: {
+    let { modelName = $bindable(), ...props }: {
         initialUrl: string
-        initialModel?: Model
-        initialApiKey: string
+        modelName: ModelName
+        model: AiInterface<unknown>
     } = $props()
 
     let githubUrl = $state(props.initialUrl)
-    let selectedModel = $state<Model>(props.initialModel ?? modelsList[0])
-    let apiKey = $state(props.initialApiKey)
+    const foo = $derived(getSnippetFromModelName(modelName))
 
     function handleSubmit(e: SubmitEvent): void {
         e.preventDefault()
@@ -18,14 +19,15 @@
         const match = githubUrl.match(urlPattern)
 
         if (!match) {
+            // TODO: nicer error message
             alert("Please enter a valid GitHub repository URL")
             return
         }
 
         const [, owner, repo] = match
         const queryParams = new URLSearchParams({
-            model: selectedModel,
-            apiKey,
+            model: modelName,
+            modelConfig: JSON.stringify(props.model.getConfig()),
         })
 
         goto(`/${owner}/${repo}?${queryParams}`)
@@ -43,18 +45,13 @@
     </div>
 
     <div class="flex gap-4">
-        <select bind:value={selectedModel} class="select select-bordered w-40">
+        <select bind:value={modelName} class="select select-bordered w-40">
             {#each modelsList as model}
                 <option value={model}>{model}</option>
             {/each}
         </select>
 
-        <input
-            bind:value={apiKey}
-            placeholder="Enter API Key"
-            class="input input-bordered flex-1"
-            required
-        />
+        {@render foo(props.model.getConfig, props.model.setConfig)}
     </div>
 
     <button type="submit" class="btn btn-primary w-full">Submit</button>

@@ -5,8 +5,8 @@
     import { initMermaid } from "$lib/backend/mermaid_backend"
 
     const props: {
-        svgId: string,
-        mermaidSpec: string,
+        svgId: string
+        mermaidSpec: string
     } = $props()
 
     let svgElement = $state<HTMLElement | SVGElement>()

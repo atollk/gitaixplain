@@ -1,13 +1,13 @@
 <script lang="ts">
-    import Loading from "$lib/components/Loading.svelte"
-    import MermaidRender from "$lib/components/MermaidRender.svelte"
     import type { AiResponse } from "$lib/backend/ai_backend"
     import type { LangchainBaseInterface } from "$lib/backend/langchain_backend"
     import { countTokens } from "$lib/backend/util"
+    import MermaidRender from "$lib/components/util/MermaidRender.svelte"
+    import Loading from "$lib/components/util/Loading.svelte"
 
     let props: {
-        interface: LangchainBaseInterface<unknown>,
-        repoSummary: XMLDocument,
+        interface: LangchainBaseInterface<unknown>
+        repoSummary: XMLDocument
     } = $props()
 
     const modelResponse = $state<Promise<AiResponse>>(props.interface.analyze(props.repoSummary))
@@ -26,12 +26,14 @@
 
         <div class="divider my-8"></div>
 
-        <MermaidRender svgId="componentFlowMermaid" mermaidSpec={modelResponse?.componentAnalysis?.flowGraph ?? ""} />
+        <!--        <MermaidRender-->
+        <!--            svgId="componentFlowMermaid"-->
+        <!--            mermaidSpec={modelResponse?.componentAnalysis?.flowGraph ?? ""}-->
+        <!--        />-->
 
         <div class="divider my-8"></div>
 
-        <ul class="list-disc">
-        </ul>
+        <ul class="list-disc"></ul>
 
         <div class="divider my-8"></div>
     </div>

@@ -1,3 +1,6 @@
+import { GeminiInterface, OllamaInterface } from "$lib/backend/langchain_implementations.js"
+import type { Snippet } from "svelte"
+
 export interface AiResponse {
     summary?: {
         purpose?: string
@@ -24,8 +27,14 @@ export interface AiResponse {
     }
 }
 
-export abstract class AiInterface {
+export abstract class AiInterface<Config> {
     abstract analyze(repoSummary: XMLDocument): Promise<AiResponse>
+
+    abstract getConfig(): Config
+
+    abstract setConfig(config: Config): void
+
+    abstract getContextWindowSize(): number
 
     protected xmlToString(xml: XMLDocument): string {
         return new XMLSerializer().serializeToString(xml)

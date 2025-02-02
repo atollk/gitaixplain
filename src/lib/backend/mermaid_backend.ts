@@ -1,11 +1,5 @@
-import { instance } from "@viz-js/viz"
 import { default as Color } from "colorjs.io"
 import mermaid from "mermaid"
-
-export async function renderGraphviz(code: string | undefined): Promise<SVGElement> {
-    if (code === undefined) return new Promise(() => {})
-    else return (await instance()).renderSVGElement(code)
-}
 
 export function initMermaid() {
     const themeColors = extractThemeColorsFromDOM()

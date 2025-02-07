@@ -6,12 +6,18 @@ import { BaseChatModel } from "@langchain/core/language_models/chat_models"
 export abstract class LangchainBaseInterface<Config> extends AiInterface<Config> {
     private model?: BaseChatModel
 
-    protected constructor(protected readonly modelGen: () => BaseChatModel) {
-        super()
+    protected constructor(
+        config: Config,
+        protected readonly modelGen: () => BaseChatModel,
+    ) {
+        super(config)
     }
 
-    async analyze(repoSummary: XMLDocument): Promise<AiResponse> {
-        return Promise.resolve({})
+    // async analyze(repoSummary: string): Promise<AiResponse> {
+    //     return Promise.resolve({})
+    // }
+
+    async analyze(repoSummary: string): Promise<AiResponse> {
         const messages = [
             new SystemMessage(
                 `
@@ -53,13 +59,12 @@ Ground rules:
 XML data follows:
 				`,
             ),
-            new HumanMessage(this.xmlToString(repoSummary)),
+            new HumanMessage(repoSummary),
         ]
 
-        const model = this.model ?? this.modelGen()
-        this.model = model
+        if (this.model === undefined) this.model = this.modelGen()
 
-        const response = await model.invoke(messages)
+        const response = await this.model.invoke(messages)
         let responseContent = response.content as string
         responseContent = stripBackticks(responseContent, "json")
         const parsedResponse: AiResponse = JSON.parse(responseContent)

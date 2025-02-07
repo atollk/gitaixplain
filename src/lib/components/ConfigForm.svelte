@@ -1,17 +1,16 @@
-<script lang="ts">
+<script lang="ts" generics="ModelConfig">
     import { goto } from "$app/navigation"
     import { type ModelName, modelsList } from "$lib/models"
     import type { AiInterface } from "$lib/backend/ai_backend"
-    import { getSnippetFromModelName } from "$lib/components/ModelConfigSnippets.svelte"
+    import ModelConfigForm from "$lib/components/util/ModelConfigForm.svelte"
 
     let { modelName = $bindable(), ...props }: {
         initialUrl: string
         modelName: ModelName
-        model: AiInterface<unknown>
+        model: AiInterface<ModelConfig>
     } = $props()
 
     let githubUrl = $state(props.initialUrl)
-    const foo = $derived(getSnippetFromModelName(modelName))
 
     function handleSubmit(e: SubmitEvent): void {
         e.preventDefault()
@@ -27,7 +26,7 @@
         const [, owner, repo] = match
         const queryParams = new URLSearchParams({
             model: modelName,
-            modelConfig: JSON.stringify(props.model.getConfig()),
+            modelConfig: JSON.stringify(props.model.config),
         })
 
         goto(`/${owner}/${repo}?${queryParams}`)
@@ -51,7 +50,7 @@
             {/each}
         </select>
 
-        {@render foo(props.model.getConfig, props.model.setConfig)}
+        <ModelConfigForm model={props.model} />
     </div>
 
     <button type="submit" class="btn btn-primary w-full">Submit</button>

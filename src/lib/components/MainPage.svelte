@@ -5,9 +5,9 @@
     import { type ModelName, modelsList } from "$lib/models"
     import { onMount } from "svelte"
     import LangchainExplain from "$lib/components/LangchainExplain.svelte"
-    import { fetchRepoSummary } from "$lib/backend/util"
     import Loading from "$lib/components/util/Loading.svelte"
     import { GeminiInterface, OllamaInterface } from "$lib/backend/langchain_implementations.js"
+    import { fetchRepoSummary, type RepositorySummary } from "$lib/backend/repo_summary_backend"
 
     const { owner, repo } = page.params
     const urlParams = page.url.searchParams
@@ -25,7 +25,7 @@
     })
     $inspect(modelName, model)
 
-    let repoSummary = $state<XMLDocument>()
+    let repoSummary = $state<RepositorySummary>()
 
     async function getContent(): Promise<void> {
         repoSummary = await fetchRepoSummary(`https://github.com/${owner}/${repo}`)

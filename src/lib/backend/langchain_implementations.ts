@@ -1,13 +1,14 @@
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai"
 import { LangchainBaseInterface } from "$lib/backend/langchain_backend"
 import { ChatOllama } from "@langchain/ollama"
-import { createRawSnippet, type Snippet } from "svelte"
+import type { FormFields } from "$lib/components/util/ModelConfigForm.svelte"
 
 type GeminiInterfaceConfig = { apiKey: string }
 
 export class GeminiInterface extends LangchainBaseInterface<GeminiInterfaceConfig> {
-    constructor(private apiKey: string) {
+    constructor(apiKey: string) {
         super(
+            { apiKey },
             () =>
                 new ChatGoogleGenerativeAI({
                     model: "gemini-1.5-flash",
@@ -15,27 +16,29 @@ export class GeminiInterface extends LangchainBaseInterface<GeminiInterfaceConfi
                     apiKey: apiKey,
                 }),
         )
-        this.apiKey = apiKey
-    }
-
-    getConfig(): GeminiInterfaceConfig {
-        return { apiKey: this.apiKey }
-    }
-
-    setConfig(config: GeminiInterfaceConfig) {
-        this.apiKey = config.apiKey
     }
 
     getContextWindowSize(): number {
         return 1_000_000
+    }
+
+    getConfigFormFields(): FormFields<GeminiInterfaceConfig> {
+        return {
+            apiKey: {
+                displayName: "API Key",
+                inputElementType: "text",
+                validate: (value: string) => value.length > 0,
+            },
+        }
     }
 }
 
 type OllamaInterfaceConfig = { contextWindowSize: number }
 
 export class OllamaInterface extends LangchainBaseInterface<OllamaInterfaceConfig> {
-    constructor(private contextWindowSize: number) {
+    constructor(contextWindowSize: number) {
         super(
+            { contextWindowSize },
             () =>
                 new ChatOllama({
                     model: "phi3:medium-128k",
@@ -44,15 +47,17 @@ export class OllamaInterface extends LangchainBaseInterface<OllamaInterfaceConfi
         )
     }
 
-    getConfig(): OllamaInterfaceConfig {
-        return { contextWindowSize: this.contextWindowSize }
-    }
-
-    setConfig(config: OllamaInterfaceConfig) {
-        this.contextWindowSize = config.contextWindowSize
-    }
-
     getContextWindowSize(): number {
-        return this.contextWindowSize
+        return this.config.contextWindowSize
+    }
+
+    getConfigFormFields(): FormFields<OllamaInterfaceConfig> {
+        return {
+            contextWindowSize: {
+                inputElementType: "number",
+                displayName: "Context Window Size",
+                validate: (value: string) => !isNaN(parseInt(value)),
+            },
+        }
     }
 }

@@ -1,5 +1,4 @@
-import { GeminiInterface, OllamaInterface } from "$lib/backend/langchain_implementations.js"
-import type { Snippet } from "svelte"
+import type { FormFields } from "$lib/components/util/ModelConfigForm.svelte"
 
 export interface AiResponse {
     summary?: {
@@ -27,16 +26,12 @@ export interface AiResponse {
     }
 }
 
-export abstract class AiInterface<Config> {
-    abstract analyze(repoSummary: XMLDocument): Promise<AiResponse>
+export abstract class AiInterface<Config extends { [property: string]: any }> {
+    protected constructor(public config: Config) {}
 
-    abstract getConfig(): Config
-
-    abstract setConfig(config: Config): void
+    abstract analyze(repoSummary: string): Promise<AiResponse>
 
     abstract getContextWindowSize(): number
 
-    protected xmlToString(xml: XMLDocument): string {
-        return new XMLSerializer().serializeToString(xml)
-    }
+    abstract getConfigFormFields(): FormFields<Config>
 }

@@ -2,22 +2,24 @@
     import type { AiResponse } from "$lib/backend/ai_backend"
     import type { LangchainBaseInterface } from "$lib/backend/langchain_backend"
     import { countTokens } from "$lib/backend/util"
-    import MermaidRender from "$lib/components/util/MermaidRender.svelte"
     import Loading from "$lib/components/util/Loading.svelte"
+    import type { RepositorySummary } from "$lib/backend/repo_summary_backend"
 
     let props: {
         interface: LangchainBaseInterface<unknown>
-        repoSummary: XMLDocument
+        repoSummary: RepositorySummary
     } = $props()
 
-    const modelResponse = $state<Promise<AiResponse>>(props.interface.analyze(props.repoSummary))
+    let repoSummaryString = $derived(props.repoSummary.toXmlString())
+
+    const modelResponse = $derived<Promise<AiResponse>>(props.interface.analyze(repoSummaryString))
 </script>
 
 {#await modelResponse}
     <Loading
         message="Summarizing the repository. This might take a while, depending on the size."
     />
-    <p>{countTokens(new XMLSerializer().serializeToString(props.repoSummary))}</p>
+    <p>{countTokens(repoSummaryString)}</p>
 {:then modelResponse}
     <div class="flex max-w-[inherit] flex-col items-center justify-center">
         <p>

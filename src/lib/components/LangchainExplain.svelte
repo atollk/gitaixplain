@@ -10,16 +10,14 @@
         repoSummary: RepositorySummary
     } = $props()
 
-    let repoSummaryString = $derived(props.repoSummary.toXmlString())
-
-    const modelResponse = $derived<Promise<AiResponse>>(props.interface.analyze(repoSummaryString))
+    const modelResponse = $derived<Promise<AiResponse>>(props.interface.analyze(props.repoSummary))
 </script>
 
 {#await modelResponse}
     <Loading
         message="Summarizing the repository. This might take a while, depending on the size."
     />
-    <p>{countTokens(repoSummaryString)}</p>
+    <p>{countTokens(props.repoSummary.toXmlString())}</p>
 {:then modelResponse}
     <div class="flex max-w-[inherit] flex-col items-center justify-center">
         <p>

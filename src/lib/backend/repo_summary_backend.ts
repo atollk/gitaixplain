@@ -37,6 +37,39 @@ class FileTree<DirectoryInfo, FileInfo> {
 
         return new FileTree(mapRepositoryMetaInfo(this.metaInfo))
     }
+
+    async mapAsync<NewDirectoryInfo, NewFileInfo>(
+        directoryMapper: (
+            directoryInfo: DirectoryInfo,
+            children: RepositoryMetaInfo<NewDirectoryInfo, NewFileInfo>,
+        ) => Promise<
+            | [NewDirectoryInfo, RepositoryMetaInfo<NewDirectoryInfo, NewFileInfo>]
+            | [NewFileInfo, null]
+        >,
+        fileMapper: (
+            fileInfo: FileInfo,
+        ) => Promise<
+            | [NewDirectoryInfo, RepositoryMetaInfo<NewDirectoryInfo, NewFileInfo>]
+            | [NewFileInfo, null]
+        >,
+    ): Promise<FileTree<NewDirectoryInfo, NewFileInfo>> {
+        async function mapRepositoryMetaInfo(
+            repositoryMetaInfo: RepositoryMetaInfo<DirectoryInfo, FileInfo>,
+        ): Promise<RepositoryMetaInfo<NewDirectoryInfo, NewFileInfo>> {
+            const result: RepositoryMetaInfo<NewDirectoryInfo, NewFileInfo> = {}
+            for (let [pathSegment, [info, rmi]] of Object.entries(repositoryMetaInfo)) {
+                if (rmi === null) {
+                    result[pathSegment] = await fileMapper(info as FileInfo)
+                } else {
+                    const children = await mapRepositoryMetaInfo(rmi)
+                    result[pathSegment] = await directoryMapper(info as DirectoryInfo, children)
+                }
+            }
+            return result
+        }
+
+        return new FileTree(await mapRepositoryMetaInfo(this.metaInfo))
+    }
 }
 
 export class RepositorySummary {
@@ -58,6 +91,37 @@ export class RepositorySummary {
         return Object.values(tree.metaInfo)
             .map((x) => x[0])
             .join("\n")
+    }
+
+    accumulateUntilLimit(
+        limitReached: (contents: string[]) => boolean,
+    ): FileTree<{ path: string }, { path: string; mergedChildren: [string, string][] }> {
+        return this.fileContent.map(
+            (directoryInfo, children) => {
+                if (!Object.values(children).every(([_, rmi]) => rmi === null))
+                    return [directoryInfo, children]
+                const mergedContents = Object.values(children).reduce(
+                    (previousValue, currentValue) => {
+                        if (currentValue[1] === null) {
+                            return previousValue.concat(currentValue[0].mergedChildren)
+                        } else {
+                            console.warn("assertion failure in accumulateUntilLimit")
+                            return []
+                        }
+                    },
+                    [] as [string, string][],
+                )
+                if (limitReached(mergedContents.map((x) => x[1]))) {
+                    return [directoryInfo, children]
+                } else {
+                    return [{ path: directoryInfo.path, mergedChildren: mergedContents }, null]
+                }
+            },
+            (fileInfo) => [
+                { path: fileInfo.path, mergedChildren: [[fileInfo.path, fileInfo.content]] },
+                null,
+            ],
+        )
     }
 }
 

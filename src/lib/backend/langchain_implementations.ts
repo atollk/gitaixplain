@@ -12,7 +12,6 @@ export class GeminiInterface extends LangchainBaseInterface<GeminiInterfaceConfi
             () =>
                 new ChatGoogleGenerativeAI({
                     model: "gemini-1.5-flash",
-                    temperature: 0,
                     apiKey: config.apiKey,
                 }),
         )
@@ -42,7 +41,6 @@ export class OllamaInterface extends LangchainBaseInterface<OllamaInterfaceConfi
 
             const model = new ChatOllama({
                 model: "gemma2:2b",
-                temperature: 0,
             })
             // Ollama silently cuts off content beyond the context window size, so we add a buffer to have more explicit control.
             model.numCtx = Math.min(this.getContextWindowSize() * 2, baseModel.maxContext)

@@ -17,6 +17,8 @@ The XML will contain three types of tags:
 - The "paths" tag will contain a list of all filenames in the Git repository.
 - The "file" tag will have an attribute for that file's path and contain the file's contents.
 - The "summary" tag will have an attribute for a file's or directory's path and contain the summary for that part created previously by you.
+
+Provide your output in a formal and factual tone in form of a document to be read.
 `
 
 const MESSAGE_ANALYZE_ENTIRE_REPO = `
@@ -95,8 +97,9 @@ export abstract class LangchainBaseInterface<
     }
 
     async analyze(repoSummary: RepositorySummary): Promise<AiResponse> {
+        const maxTokens = this.getContextWindowSize() - countTokens(MESSAGE_SUMMARIZE_PARTS)
         const contentsReachTokenLimit = (contents: string[]) =>
-            countTokens(contents.join("\n")) >= this.getContextWindowSize()
+            contents.reduce((prev, cur) => prev + countTokens(cur), 0) >= maxTokens
         const groupedFiles = repoSummary.accumulateUntilLimit(contentsReachTokenLimit)
         console.log(groupedFiles)
 
@@ -104,32 +107,70 @@ export abstract class LangchainBaseInterface<
 
         const mergedTopLevelsTree = await groupedFiles.mapAsync<
             never,
-            { path: string; xml: string }
+            { path: string; xml: string; tokens: number }
         >(
             async (directoryInfo, children) => {
-                let mergedXml = ""
+                // Group as many children together as possible while staying within token limit.
+                const childrenGroups: { path: string; xml: string; tokens: number }[][] = []
                 for (let [child, _] of Object.values(children)) {
-                    let fileContent = child.xml
-                    if (contentsReachTokenLimit([fileContent])) {
-                        fileContent = await this.summarizePart(child.path, fileContent)
+                    let foundMatch = false
+                    for (let i = 0; i < childrenGroups.length; i++) {
+                        const groupTokenSum = childrenGroups[i].reduce(
+                            (acc, { tokens }) => acc + tokens,
+                            0,
+                        )
+                        if (groupTokenSum + child.tokens < maxTokens) {
+                            foundMatch = true
+                            childrenGroups[i].push(child)
+                        }
                     }
-                    mergedXml += fileContent
+                    if (!foundMatch) childrenGroups.push([child])
                 }
-                const summary = await this.summarizePart(directoryInfo.path, mergedXml)
-                return [{ path: directoryInfo.path, xml: summary }, null]
+
+                // Merge the XML of all groups.
+                const mergedXmls = childrenGroups.map((group) => {
+                    let groupXml = ""
+                    for (let { xml } of group) groupXml += xml
+                    return groupXml
+                })
+
+                // If there is only a single group, no need to summarize here.
+                if (mergedXmls.length === 1)
+                    return [
+                        {
+                            path: directoryInfo.path,
+                            xml: mergedXmls[0],
+                            tokens: countTokens(mergedXmls[0]),
+                        },
+                        null,
+                    ]
+
+                // Summarize all the children groups individually.
+                let summarizedGroups: string[] = []
+                for (let xml of mergedXmls) {
+                    summarizedGroups.push(await this.summarizePart(directoryInfo.path, xml))
+                }
+
+                let completeXml = ""
+                for (let xml of summarizedGroups) completeXml += xml
+                return [
+                    {
+                        path: directoryInfo.path,
+                        xml: completeXml,
+                        tokens: countTokens(completeXml),
+                    },
+                    null,
+                ]
             },
-            async (fileInfo) => [
-                {
-                    path: fileInfo.path,
-                    xml: fileInfo.mergedChildren
-                        .map(([path, content]) => `<file path=${path}>${content}</file>`)
-                        .join("\n"),
-                },
-                null,
-            ],
+            async (fileInfo) => {
+                const xml = fileInfo.mergedChildren
+                    .map(([path, content]) => `<file path=${path}>${content}</file>`)
+                    .join("\n")
+                return [{ path: fileInfo.path, xml, tokens: countTokens(xml) }, null]
+            },
         )
         const mergedTopLevels = Object.values(mergedTopLevelsTree.metaInfo).map((x) => x[0])
-        console.log(mergedTopLevels)
+        console.log("mergedTopLevels", mergedTopLevels)
 
         // TODO: summarize top levels between each other
 

@@ -1,23 +1,38 @@
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai"
+import { ChatGroq } from "@langchain/groq"
 import { LangchainBaseInterface } from "$lib/backend/langchain_backend"
 import { ChatOllama } from "@langchain/ollama"
-import type { ModelName } from "$lib/models"
+import type { ApiName } from "$lib/models"
 
-type GeminiInterfaceConfig = { apiKey: string }
+type GeminiInterfaceConfig = { readonly apiKey: string; readonly model: string }
 
 export class GeminiInterface extends LangchainBaseInterface<GeminiInterfaceConfig> {
+    private readonly contextWindowSize: number
+
     constructor(config: GeminiInterfaceConfig) {
+        const model = GeminiInterface.models.find(({ name }) => name !== config.model)
+        if (model === undefined) {
+            throw Error(`Invalid Gemini model: ${config.model}`)
+        }
         super(
             config,
             () =>
                 new ChatGoogleGenerativeAI({
-                    model: "gemini-1.5-flash",
+                    model: config.model,
                     apiKey: config.apiKey,
                 }),
         )
+        this.contextWindowSize = model.contextSize
     }
 
-    get name(): ModelName {
+    static models = [
+        { name: "gemini-1.5-flash", contextSize: 1_000_000 },
+        { name: "gemini-1.5-pro", contextSize: 2_000_000 },
+        { name: "gemini-1.5-flash-8b", contextSize: 1_000_000 },
+        { name: "gemini-2.0-flash", contextSize: 1_000_000 },
+    ]
+
+    get name(): ApiName {
         return "Gemini"
     }
 
@@ -26,7 +41,51 @@ export class GeminiInterface extends LangchainBaseInterface<GeminiInterfaceConfi
     }
 
     getContextWindowSize(): number {
-        return 1_000_000
+        return this.contextWindowSize
+    }
+}
+
+export type GroqInterfaceConfig = { readonly apiKey: string; readonly model: string }
+
+export class GroqInterface extends LangchainBaseInterface<GroqInterfaceConfig> {
+    private readonly contextWindowSize: number
+
+    constructor(config: GroqInterfaceConfig) {
+        const model = GroqInterface.models.find(({ name }) => name !== config.model)
+        if (model === undefined) {
+            throw Error(`Invalid Groq model: ${config.model}`)
+        }
+        super(
+            config,
+            () =>
+                new ChatGroq({
+                    model: "gemini-1.5-flash",
+                    apiKey: config.apiKey,
+                }),
+        )
+        this.contextWindowSize = model.contextSize
+    }
+
+    static models = [
+        { name: "gemma2-9b-it", contextSize: 8_000 },
+        { name: "llama-3.3-70b-versatile", contextSize: 128_000 },
+        { name: "llama-3.1-8b-instant", contextSize: 128_000 },
+        { name: "llama-guard-3-8b", contextSize: 8_000 },
+        { name: "llama3-70b-8192", contextSize: 8_000 },
+        { name: "llama3-8b-8192", contextSize: 8_000 },
+        { name: "mixtral-8x7b-32768", contextSize: 32_000 },
+    ]
+
+    get name(): ApiName {
+        return "Groq"
+    }
+
+    get supportsSystemPrompt(): boolean {
+        return true
+    }
+
+    getContextWindowSize(): number {
+        return this.contextWindowSize
     }
 }
 
@@ -48,7 +107,7 @@ export class OllamaInterface extends LangchainBaseInterface<OllamaInterfaceConfi
         })
     }
 
-    get name(): ModelName {
+    get name(): ApiName {
         return "Ollama"
     }
 

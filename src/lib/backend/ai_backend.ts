@@ -1,5 +1,5 @@
 import type { RepositorySummary } from "$lib/backend/repo_summary_backend"
-import type { ModelName } from "$lib/models"
+import type { ApiName } from "$lib/models"
 
 export interface AiResponse {
     summary?: {
@@ -28,9 +28,9 @@ export interface AiResponse {
 }
 
 export abstract class AiInterface<Config extends { [property: string]: any }> {
-    protected constructor(public config: Config) {}
+    protected constructor(readonly config: Config) {}
 
-    abstract get name(): ModelName
+    abstract get name(): ApiName
 
     abstract analyze(repoSummary: RepositorySummary): Promise<AiResponse>
 

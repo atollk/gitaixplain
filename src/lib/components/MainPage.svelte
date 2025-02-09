@@ -1,35 +1,43 @@
 <script lang="ts">
     import { page } from "$app/state"
     import Header from "$lib/components/Header.svelte"
-    import { type ModelName, modelsList } from "$lib/models"
+    import { apiList, type ApiName } from "$lib/models"
     import { onMount } from "svelte"
     import LangchainExplain from "$lib/components/LangchainExplain.svelte"
     import Loading from "$lib/components/util/Loading.svelte"
     import { fetchRepoSummary, type RepositorySummary } from "$lib/backend/repo_summary_backend"
     import { AiInterface } from "$lib/backend/ai_backend"
     import ConfigForm from "$lib/components/ConfigForm.svelte"
-    import { GeminiInterface, OllamaInterface } from "$lib/backend/langchain_implementations"
+    import { GeminiInterface, GroqInterface, OllamaInterface } from "$lib/backend/langchain_implementations"
 
     const { owner, repo } = page.params
     const urlParams = page.url.searchParams
-    const modelName = urlParams.get("model") as ModelName ?? modelsList[0]
-    const config = JSON.parse(urlParams.get("modelConfig") ?? "{}")
+    const apiName = urlParams.get("api") as ApiName ?? apiList[0]
+    const config = JSON.parse(urlParams.get("config") ?? "{}")
 
     function aiInterfaceFromModelName(
-        modelName: ModelName,
+        apiName: ApiName,
         config: { [property: string]: any },
     ): AiInterface<any> {
-        switch (modelName) {
+        switch (apiName) {
             case "Gemini":
-                return new GeminiInterface({ apiKey: config.apiKey ?? "" })
+                return new GeminiInterface({
+                    apiKey: config.apiKey ?? "",
+                    model: config.model ?? GeminiInterface.models[0].name,
+                })
+            case "Groq":
+                return new GroqInterface({
+                    apiKey: config.apiKey ?? "",
+                    model: config.model ?? GroqInterface.models[0].name,
+                })
             case "Ollama":
                 return new OllamaInterface({ contextWindowSize: config.contextWindowSize ?? 4000 })
             default:
-                throw Error(`Model name ${modelName} is invalid.`)
+                throw Error(`API ${apiName} is invalid.`)
         }
     }
 
-    const model = aiInterfaceFromModelName(modelName, config)
+    const model = aiInterfaceFromModelName(apiName, config)
 
     let repoSummary = $state<RepositorySummary>()
 
@@ -44,7 +52,7 @@
     <Header />
     <ConfigForm
         initialUrl={`https://github.com/${owner}/${repo}`}
-        initialModelName={modelName}
+        initialApiName={apiName}
         initialConfig={config}
     />
 

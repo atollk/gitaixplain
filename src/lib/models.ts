@@ -1,2 +1,2 @@
-export const modelsList = ["Gemini", "Ollama"] as const
-export type ModelName = (typeof modelsList)[number]
+export const apiList = ["Gemini", "Groq", "Ollama"] as const
+export type ApiName = (typeof apiList)[number]

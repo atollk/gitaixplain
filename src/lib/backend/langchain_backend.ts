@@ -1,8 +1,8 @@
 import { HumanMessage, SystemMessage } from "@langchain/core/messages"
-import { AiInterface, type AiResponse } from "$lib/backend/ai_backend"
 import { countTokens, stripBackticks } from "$lib/backend/util"
 import { BaseChatModel } from "@langchain/core/language_models/chat_models"
 import type { RepositorySummary } from "$lib/backend/repo_summary_backend"
+import { AiInterface, type AiResponse } from "$lib/backend/ai_backend"
 
 const MESSAGE_SUMMARIZE_PARTS = `
 You will be provided with an XML file describing parts of a Git repository. 
@@ -75,17 +75,18 @@ export abstract class LangchainBaseInterface<
         super(config)
     }
 
-    // async analyze(repoSummary: string): Promise<AiResponse> {
-    //     return Promise.resolve({})
-    // }
+    protected abstract get supportsSystemPrompt(): boolean
 
     private async getResponse(systemMessage: string, userMessage: string): Promise<string> {
-        console.log("getResponse", userMessage)
-        const messages = [new SystemMessage(systemMessage), new HumanMessage(userMessage)]
+        const messages = this.supportsSystemPrompt
+            ? [new SystemMessage(systemMessage), new HumanMessage(userMessage)]
+            : `${systemMessage}\n\n${userMessage}`
+        console.log("getResponse", countTokens(systemMessage) + countTokens(userMessage), messages)
 
         if (this.model === undefined) this.model = this.modelGen()
 
         const response = await this.model.invoke(messages)
+        console.log("/getResponse", countTokens(response.content as string), response.content)
         return response.content as string
     }
 
@@ -138,6 +139,7 @@ export abstract class LangchainBaseInterface<
         )
 
         responseContent = stripBackticks(responseContent, "json")
+        console.log("final response", responseContent)
         const parsedResponse: AiResponse = JSON.parse(responseContent)
         if (parsedResponse.componentAnalysis !== undefined) {
             parsedResponse.componentAnalysis.flowGraph = stripBackticks(

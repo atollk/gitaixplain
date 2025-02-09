@@ -1,16 +1,17 @@
-<script lang="ts" generics="ModelConfig">
+<script lang="ts">
     import { goto } from "$app/navigation"
     import { type ModelName, modelsList } from "$lib/models"
-    import type { AiInterface } from "$lib/backend/ai_backend"
-    import ModelConfigForm from "$lib/components/util/ModelConfigForm.svelte"
+    import ModelConfigForm, { modelConfigFields } from "$lib/components/util/ModelConfigForm.svelte"
 
-    let { modelName = $bindable(), ...props }: {
+    let { ...props }: {
         initialUrl: string
-        modelName: ModelName
-        model: AiInterface<ModelConfig>
+        initialModelName: ModelName
+        initialConfig: object
     } = $props()
 
     let githubUrl = $state(props.initialUrl)
+    let modelName = $state(props.initialModelName)
+    let modelConfig = $state(props.initialConfig)
 
     function handleSubmit(e: SubmitEvent): void {
         e.preventDefault()
@@ -26,9 +27,10 @@
         const [, owner, repo] = match
         const queryParams = new URLSearchParams({
             model: modelName,
-            modelConfig: JSON.stringify(props.model.config),
+            modelConfig: JSON.stringify(modelConfig),
         })
 
+        // TODO: actually force a refresh, don't just change the contents of the URL bar
         goto(`/${owner}/${repo}?${queryParams}`)
     }
 </script>
@@ -50,7 +52,7 @@
             {/each}
         </select>
 
-        <ModelConfigForm model={props.model} />
+        <ModelConfigForm fields={modelConfigFields[modelName]} bind:config={modelConfig} />
     </div>
 
     <button type="submit" class="btn btn-primary w-full">Submit</button>

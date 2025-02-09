@@ -1,63 +1,64 @@
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai"
 import { LangchainBaseInterface } from "$lib/backend/langchain_backend"
 import { ChatOllama } from "@langchain/ollama"
-import type { FormFields } from "$lib/components/util/ModelConfigForm.svelte"
+import type { ModelName } from "$lib/models"
 
 type GeminiInterfaceConfig = { apiKey: string }
 
 export class GeminiInterface extends LangchainBaseInterface<GeminiInterfaceConfig> {
-    constructor(apiKey: string) {
+    constructor(config: GeminiInterfaceConfig) {
         super(
-            { apiKey },
+            config,
             () =>
                 new ChatGoogleGenerativeAI({
                     model: "gemini-1.5-flash",
                     temperature: 0,
-                    apiKey: apiKey,
+                    apiKey: config.apiKey,
                 }),
         )
+    }
+
+    get name(): ModelName {
+        return "Gemini"
+    }
+
+    get supportsSystemPrompt(): boolean {
+        return true
     }
 
     getContextWindowSize(): number {
         return 1_000_000
     }
-
-    getConfigFormFields(): FormFields<GeminiInterfaceConfig> {
-        return {
-            apiKey: {
-                displayName: "API Key",
-                inputElementType: "text",
-                validate: (value: string) => value.length > 0,
-            },
-        }
-    }
 }
 
-type OllamaInterfaceConfig = { contextWindowSize: number }
+export type OllamaInterfaceConfig = { contextWindowSize: number }
 
 export class OllamaInterface extends LangchainBaseInterface<OllamaInterfaceConfig> {
-    constructor(contextWindowSize: number) {
-        super(
-            { contextWindowSize },
-            () =>
-                new ChatOllama({
-                    model: "phi3:medium-128k",
-                    temperature: 0,
-                }),
-        )
+    static models = { ["gemma2:2b"]: { maxContext: 8192 } }
+
+    constructor(config: OllamaInterfaceConfig) {
+        super(config, () => {
+            const baseModel = OllamaInterface.models["gemma2:2b"]
+
+            const model = new ChatOllama({
+                model: "gemma2:2b",
+                temperature: 0,
+            })
+            // Ollama silently cuts off content beyond the context window size, so we add a buffer to have more explicit control.
+            model.numCtx = Math.min(this.getContextWindowSize() * 2, baseModel.maxContext)
+            return model
+        })
+    }
+
+    get name(): ModelName {
+        return "Ollama"
+    }
+
+    get supportsSystemPrompt(): boolean {
+        return false
     }
 
     getContextWindowSize(): number {
         return this.config.contextWindowSize
-    }
-
-    getConfigFormFields(): FormFields<OllamaInterfaceConfig> {
-        return {
-            contextWindowSize: {
-                inputElementType: "number",
-                displayName: "Context Window Size",
-                validate: (value: string) => !isNaN(parseInt(value)),
-            },
-        }
     }
 }

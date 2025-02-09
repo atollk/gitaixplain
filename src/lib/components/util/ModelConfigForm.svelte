@@ -1,41 +1,53 @@
 <script module lang="ts">
-    type InferInputType<T> = T extends string
-        ? "text" | "email"
-        : T extends number
-            ? "number"
-            : T extends boolean
-                ? "checkbox"
-                : T extends Date
-                    ? "date"
-                    : never;
+    import type { ModelName } from "$lib/models"
 
-    export type FormFields<T> = {
-        [K in keyof T]: {
-            displayName: string;
-            validate?: (value: string) => boolean;
-            inputElementType: InferInputType<T[K]>;
-        }
+    type InputTypeMap = {
+        "text": string
+        "number": number
+        "date": Date
+        "checkbox": boolean
+        "email": string
     };
+
+    export type FormFields = {
+        [fieldName: string]: {
+            displayName: string
+            validate?: (value: string) => boolean
+            inputElementType: keyof InputTypeMap
+        }
+    }
+
+    export const modelConfigFields: { [K in ModelName]: FormFields } = {
+        Gemini: {
+            apiKey: {
+                displayName: "API Key",
+                inputElementType: "text",
+                validate: (value: string) => value.length > 0,
+            },
+        },
+        Ollama: {
+            contextWindowSize: {
+                inputElementType: "number",
+                displayName: "Context Window Size",
+                validate: (value: string) => !isNaN(parseInt(value)),
+            },
+        },
+    }
+
 </script>
 
-<script lang="ts" generics="T extends object">
-    import type { AiInterface } from "$lib/backend/ai_backend"
-
-    const { model }: { model: AiInterface<T> } = $props()
-    const fieldNames = $derived(Object.keys(model.config) as Array<keyof T>)
-
-    function onInput(element: HTMLInputElement, fieldName: keyof T) {
-        model.config[fieldName] = (element.value as T[keyof T])
-    }
+<script lang="ts">
+    const { fields, config = $bindable() }: { fields: FormFields, config: { [fieldName: string]: any } } = $props()
 </script>
 
 <div>
-    {#each fieldNames as fieldName}
+    {#each Object.entries(fields) as [fieldName, field]}
         <div>
             <label>
-                {model.getConfigFormFields()[fieldName].displayName}
-                <input type={model.getConfigFormFields()[fieldName].inputElementType}
-                       oninput={(event) => onInput(event.currentTarget, fieldName)} />
+                {field.displayName}
+                <input type={field.inputElementType}
+                       bind:value={ config[fieldName] }
+                />
             </label>
         </div>
     {/each}

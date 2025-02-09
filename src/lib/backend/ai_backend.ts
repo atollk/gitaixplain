@@ -1,5 +1,5 @@
-import type { FormFields } from "$lib/components/util/ModelConfigForm.svelte"
 import type { RepositorySummary } from "$lib/backend/repo_summary_backend"
+import type { ModelName } from "$lib/models"
 
 export interface AiResponse {
     summary?: {
@@ -30,9 +30,9 @@ export interface AiResponse {
 export abstract class AiInterface<Config extends { [property: string]: any }> {
     protected constructor(public config: Config) {}
 
+    abstract get name(): ModelName
+
     abstract analyze(repoSummary: RepositorySummary): Promise<AiResponse>
 
     abstract getContextWindowSize(): number
-
-    abstract getConfigFormFields(): FormFields<Config>
 }

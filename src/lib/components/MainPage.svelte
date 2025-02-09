@@ -1,29 +1,35 @@
 <script lang="ts">
     import { page } from "$app/state"
     import Header from "$lib/components/Header.svelte"
-    import ConfigForm from "$lib/components/ConfigForm.svelte"
     import { type ModelName, modelsList } from "$lib/models"
     import { onMount } from "svelte"
     import LangchainExplain from "$lib/components/LangchainExplain.svelte"
     import Loading from "$lib/components/util/Loading.svelte"
-    import { GeminiInterface, OllamaInterface } from "$lib/backend/langchain_implementations.js"
     import { fetchRepoSummary, type RepositorySummary } from "$lib/backend/repo_summary_backend"
+    import { AiInterface } from "$lib/backend/ai_backend"
+    import ConfigForm from "$lib/components/ConfigForm.svelte"
+    import { GeminiInterface, OllamaInterface } from "$lib/backend/langchain_implementations"
 
     const { owner, repo } = page.params
     const urlParams = page.url.searchParams
-    let modelName = $state(urlParams.get("model") as ModelName ?? modelsList[0])
-    const model = $derived.by(() => {
+    const modelName = urlParams.get("model") as ModelName ?? modelsList[0]
+    const config = JSON.parse(urlParams.get("modelConfig") ?? "{}")
+
+    function aiInterfaceFromModelName(
+        modelName: ModelName,
+        config: { [property: string]: any },
+    ): AiInterface<any> {
         switch (modelName) {
             case "Gemini":
-                const apiKey = urlParams.get("apiKey") ?? ""
-                return new GeminiInterface(apiKey)
+                return new GeminiInterface({ apiKey: config.apiKey ?? "" })
             case "Ollama":
-                return new OllamaInterface(50_000)
+                return new OllamaInterface({ contextWindowSize: config.contextWindowSize ?? 4000 })
             default:
                 throw Error(`Model name ${modelName} is invalid.`)
         }
-    })
-    $inspect(modelName, model)
+    }
+
+    const model = aiInterfaceFromModelName(modelName, config)
 
     let repoSummary = $state<RepositorySummary>()
 
@@ -38,8 +44,8 @@
     <Header />
     <ConfigForm
         initialUrl={`https://github.com/${owner}/${repo}`}
-        bind:modelName={modelName}
-        model={model}
+        initialModelName={modelName}
+        initialConfig={config}
     />
 
     <div class="divider my-8"></div>

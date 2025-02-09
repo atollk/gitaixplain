@@ -1,12 +1,11 @@
 <script lang="ts">
-    import type { AiResponse } from "$lib/backend/ai_backend"
-    import type { LangchainBaseInterface } from "$lib/backend/langchain_backend"
+    import { AiInterface, type AiResponse } from "$lib/backend/ai_backend"
     import { countTokens } from "$lib/backend/util"
     import Loading from "$lib/components/util/Loading.svelte"
     import type { RepositorySummary } from "$lib/backend/repo_summary_backend"
 
     let props: {
-        interface: LangchainBaseInterface<unknown>
+        interface: AiInterface<any>
         repoSummary: RepositorySummary
     } = $props()
 

@@ -3,6 +3,7 @@
     import { countTokens } from "$lib/backend/util"
     import Loading from "$lib/components/util/Loading.svelte"
     import type { RepositorySummary } from "$lib/backend/repo_summary_backend"
+    import MermaidRender from "$lib/components/util/MermaidRender.svelte"
 
     let props: {
         interface: AiInterface<any>
@@ -25,10 +26,10 @@
 
         <div class="divider my-8"></div>
 
-        <!--        <MermaidRender-->
-        <!--            svgId="componentFlowMermaid"-->
-        <!--            mermaidSpec={modelResponse?.componentAnalysis?.flowGraph ?? ""}-->
-        <!--        />-->
+        <MermaidRender
+            svgId="componentFlowMermaid"
+            mermaidSpec={modelResponse?.componentAnalysis?.flowGraph ?? ""}
+        />
 
         <div class="divider my-8"></div>
 

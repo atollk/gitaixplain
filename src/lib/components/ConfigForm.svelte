@@ -54,42 +54,38 @@
 
         <div>
             {#if apiName === "Gemini"}
-                <div>
-                    <label>
-                        API Key
-                        <input type=text bind:value={ config.apiKey } />
+                <div class="flex flex-col gap-2">
+                    <label class="input input-bordered flex items-center gap-2">
+                        API Key:
+                        <input type=text class="grow" bind:value={ config.apiKey } />
                     </label>
 
-                    <label>
-                        Model
-                        <select bind:value={config.model}>
-                            {#each GeminiInterface.models as model}
-                                <option value={model.name}>{model.name}</option>
-                            {/each}
-                        </select>
-                    </label>
+                    <select bind:value={config.model} class="select select-bordered w-full max-w-xs">
+                        <option disabled selected>Model</option>
+                        {#each GeminiInterface.models as model}
+                            <option value={model.name}>{model.name}</option>
+                        {/each}
+                    </select>
                 </div>
             {:else if apiName === "Groq"}
-                <div>
-                    <label>
-                        API Key
-                        <input type=text bind:value={ config.apiKey } />
+                <div class="flex flex-col gap-2">
+                    <label class="input input-bordered flex items-center gap-2">
+                        API Key:
+                        <input type=text class="grow" bind:value={ config.apiKey } />
                     </label>
 
-                    <label>
-                        Model
-                        <select bind:value={config.model}>
-                            {#each GroqInterface.models as model}
-                                <option value={model.name}>{model.name}</option>
-                            {/each}
-                        </select>
-                    </label>
+                    <select bind:value={config.model} class="select select-bordered w-full max-w-xs">
+                        <option disabled selected>Model</option>
+                        {#each GroqInterface.models as model}
+                            <option value={model.name}>{model.name}</option>
+                        {/each}
+                    </select>
                 </div>
             {:else if apiName === "Ollama"}
                 <div>
-                    <label>
-                        Context Size
-                        <input type=number bind:value={ config.contextWindowSize } />
+                    <label class="input input-bordered flex items-center gap-2">
+                        Context Size:
+                        <input type=number class="grow" bind:value={ config.contextWindowSize } />
                     </label>
                 </div>
             {:else}

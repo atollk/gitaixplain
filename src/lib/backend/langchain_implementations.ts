@@ -51,7 +51,7 @@ export class GroqInterface extends LangchainBaseInterface<GroqInterfaceConfig> {
     private readonly contextWindowSize: number
 
     constructor(config: GroqInterfaceConfig) {
-        const model = GroqInterface.models.find(({ name }) => name !== config.model)
+        const model = GroqInterface.models.find(({ name }) => name === config.model)
         if (model === undefined) {
             throw Error(`Invalid Groq model: ${config.model}`)
         }
@@ -59,7 +59,7 @@ export class GroqInterface extends LangchainBaseInterface<GroqInterfaceConfig> {
             config,
             () =>
                 new ChatGroq({
-                    model: "gemini-1.5-flash",
+                    model: config.model,
                     apiKey: config.apiKey,
                 }),
         )

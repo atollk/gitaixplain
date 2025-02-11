@@ -62,7 +62,7 @@
 
                     <label>
                         Model
-                        <select>
+                        <select bind:value={config.model}>
                             {#each GeminiInterface.models as model}
                                 <option value={model.name}>{model.name}</option>
                             {/each}
@@ -78,7 +78,7 @@
 
                     <label>
                         Model
-                        <select>
+                        <select bind:value={config.model}>
                             {#each GroqInterface.models as model}
                                 <option value={model.name}>{model.name}</option>
                             {/each}

@@ -83,12 +83,10 @@ export abstract class LangchainBaseInterface<
         const messages = this.supportsSystemPrompt
             ? [new SystemMessage(systemMessage), new HumanMessage(userMessage)]
             : `${systemMessage}\n\n${userMessage}`
-        console.log("getResponse", countTokens(systemMessage) + countTokens(userMessage), messages)
 
         if (this.model === undefined) this.model = this.modelGen()
 
         const response = await this.model.invoke(messages)
-        console.log("/getResponse", countTokens(response.content as string), response.content)
         return response.content as string
     }
 
@@ -98,18 +96,15 @@ export abstract class LangchainBaseInterface<
 
     async analyze(repoSummary: RepositorySummary): Promise<AiResponse> {
         const maxTokens = this.getContextWindowSize() - countTokens(MESSAGE_SUMMARIZE_PARTS)
-        const contentsReachTokenLimit = (contents: string[]) =>
-            contents.reduce((prev, cur) => prev + countTokens(cur), 0) >= maxTokens
-        const groupedFiles = repoSummary.accumulateUntilLimit(contentsReachTokenLimit)
-        console.log(groupedFiles)
 
         // TODO "paths" tag
 
-        const mergedTopLevelsTree = await groupedFiles.mapAsync<
+        const mergedTopLevelsTree = await repoSummary.fileContent.mapAsync<
             never,
             { path: string; xml: string; tokens: number }
         >(
             async (directoryInfo, children) => {
+                await new Promise((r) => setTimeout(r, 10))
                 // Group as many children together as possible while staying within token limit.
                 const childrenGroups: { path: string; xml: string; tokens: number }[][] = []
                 for (let [child, _] of Object.values(children)) {
@@ -163,14 +158,12 @@ export abstract class LangchainBaseInterface<
                 ]
             },
             async (fileInfo) => {
-                const xml = fileInfo.mergedChildren
-                    .map(([path, content]) => `<file path=${path}>${content}</file>`)
-                    .join("\n")
+                await new Promise((r) => setTimeout(r, 10))
+                const xml = `<file path=${fileInfo.path}>${fileInfo.content}</file>`
                 return [{ path: fileInfo.path, xml, tokens: countTokens(xml) }, null]
             },
         )
         const mergedTopLevels = Object.values(mergedTopLevelsTree.metaInfo).map((x) => x[0])
-        console.log("mergedTopLevels", mergedTopLevels)
 
         // TODO: summarize top levels between each other
 
@@ -180,7 +173,6 @@ export abstract class LangchainBaseInterface<
         )
 
         responseContent = stripBackticks(responseContent, "json")
-        console.log("final response", responseContent)
         const parsedResponse: AiResponse = JSON.parse(responseContent)
         if (parsedResponse.componentAnalysis !== undefined) {
             parsedResponse.componentAnalysis.flowGraph = stripBackticks(

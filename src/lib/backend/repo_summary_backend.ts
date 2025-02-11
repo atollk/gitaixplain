@@ -92,37 +92,6 @@ export class RepositorySummary {
             .map((x) => x[0])
             .join("\n")
     }
-
-    accumulateUntilLimit(
-        limitReached: (contents: string[]) => boolean,
-    ): FileTree<{ path: string }, { path: string; mergedChildren: [string, string][] }> {
-        return this.fileContent.map(
-            (directoryInfo, children) => {
-                if (!Object.values(children).every(([_, rmi]) => rmi === null))
-                    return [directoryInfo, children]
-                const mergedContents = Object.values(children).reduce(
-                    (previousValue, currentValue) => {
-                        if (currentValue[1] === null) {
-                            return previousValue.concat(currentValue[0].mergedChildren)
-                        } else {
-                            console.warn("assertion failure in accumulateUntilLimit")
-                            return []
-                        }
-                    },
-                    [] as [string, string][],
-                )
-                if (limitReached(mergedContents.map((x) => x[1]))) {
-                    return [directoryInfo, children]
-                } else {
-                    return [{ path: directoryInfo.path, mergedChildren: mergedContents }, null]
-                }
-            },
-            (fileInfo) => [
-                { path: fileInfo.path, mergedChildren: [[fileInfo.path, fileInfo.content]] },
-                null,
-            ],
-        )
-    }
 }
 
 async function fetchRepomixSummary(url: string): Promise<RepositorySummary> {

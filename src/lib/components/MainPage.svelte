@@ -39,10 +39,11 @@
 
     const model = aiInterfaceFromModelName(apiName, config)
 
+    let repoLink = $derived(`https://github.com/${owner}/${repo}`)
     let repoSummary = $state<RepositorySummary>()
 
     async function getContent(): Promise<void> {
-        repoSummary = await fetchRepoSummary(`https://github.com/${owner}/${repo}`)
+        repoSummary = await fetchRepoSummary(repoLink)
     }
 
     onMount(async () => await getContent())
@@ -51,7 +52,7 @@
 <main class="container mx-auto flex max-w-6xl flex-col items-center px-4 py-8">
     <Header />
     <ConfigForm
-        initialUrl={`https://github.com/${owner}/${repo}`}
+        initialUrl={repoLink}
         initialApiName={apiName}
         initialConfig={config}
     />
@@ -61,6 +62,6 @@
     {#if repoSummary === undefined}
         <Loading message="Loading your repository" />
     {:else}
-        <LangchainExplain interface={model} {repoSummary} />
+        <LangchainExplain repoLink={repoLink} interface={model} {repoSummary} />
     {/if}
 </main>

@@ -1,5 +1,6 @@
 import { default as Color } from "colorjs.io"
-import mermaid from "mermaid"
+import mermaid, { type MermaidConfig } from "mermaid"
+import type { Graph } from "$lib/backend/ai_backend"
 
 export function initMermaid() {
     const themeColors = extractThemeColorsFromDOM()
@@ -7,7 +8,7 @@ export function initMermaid() {
         const c = new Color(colorString)
         return c.to("srgb").toString({ format: "hex" })
     }
-    mermaid.initialize({
+    const options = <MermaidConfig>{
         theme: "base",
         themeVariables: {
             primaryColor: colorToHex(themeColors.primary),
@@ -19,7 +20,33 @@ export function initMermaid() {
             background: colorToHex(themeColors.base100),
         },
         fontSize: 100,
+    }
+    console.log("Mermaid Options", options)
+    mermaid.initialize(options)
+}
+
+export function flowGraphToMermaid(graph: Graph): string {
+    const lines: string[] = ["graph TD;"]
+
+    const escapeId = (id: string): string => id.replace(" ", "_")
+    const escapeLabel = (label: string): string => `"${label.replace('"', "'")}"`
+
+    // Add nodes with labels
+    graph.nodes.forEach((node) => {
+        lines.push(`    ${escapeId(node.id)}[${escapeLabel(node.label)}]`)
     })
+
+    // Add edges with optional labels
+    graph.edges.forEach((edge) => {
+        const baseEdge = `    ${escapeId(edge.from)} --> `
+        if (edge.label) {
+            lines.push(`${baseEdge}|${escapeLabel(edge.label)}| ${escapeId(edge.to)}`)
+        } else {
+            lines.push(`${baseEdge}${escapeId(edge.to)}`)
+        }
+    })
+
+    return lines.join("\n")
 }
 
 interface ThemeColors {

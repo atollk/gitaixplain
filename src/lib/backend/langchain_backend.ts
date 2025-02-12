@@ -36,8 +36,21 @@ The output must strictly follow this schema:
     "purpose": "Single paragraph describing the project's core purpose",
   },
   "componentAnalysis": {
-    "flowGraph": "Mermaid diagram code showing key components and their interactions",
-    "entryPoints": ["Array of main entry point files"],
+    "flowGraph": {  // A graph describing components and their interactions.
+        "nodes": [
+          {
+            "id": "string",
+            "label": "string",
+          }
+        ],
+        "edges": [
+          {
+            "from": "string", // node id
+            "to": "string",   // node id
+            "label": "string", // optional
+          }
+        ]
+    },
   },
   "keyFiles": [
     {
@@ -50,13 +63,8 @@ The output must strictly follow this schema:
   "usagePaths": {
     "setup": ["Step-by-step setup instructions"],
     "mainFlow": "Description of primary data/control flow through system",
-    "commonPatterns": ["Recurring code patterns worth noting"]
   },
-  "securityConsiderations": {
-    "entryPoints": ["Security-critical entry points"],
-    "dataFlow": ["Sensitive data paths"],
-    "dependencies": ["Security-relevant dependencies"]
-  }
+  "dependencies": ["List of important dependencies frameworks / libraries"]
 }
 
 Ground rules:
@@ -174,13 +182,6 @@ export abstract class LangchainBaseInterface<
 
         responseContent = stripBackticks(responseContent, "json")
         const parsedResponse: AiResponse = JSON.parse(responseContent)
-        if (parsedResponse.componentAnalysis !== undefined) {
-            parsedResponse.componentAnalysis.flowGraph = stripBackticks(
-                parsedResponse?.componentAnalysis?.flowGraph ?? "",
-                "mermaid",
-            )
-        }
-
         console.log(parsedResponse)
         return parsedResponse
     }

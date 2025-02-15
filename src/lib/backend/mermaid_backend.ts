@@ -28,21 +28,21 @@ export function initMermaid() {
 export function flowGraphToMermaid(graph: Graph): string {
     const lines: string[] = ["graph TD;"]
 
-    const escapeId = (id: string): string => id.replace(" ", "_")
     const escapeLabel = (label: string): string => `"${label.replace('"', "'")}"`
+    const nodeNameToId = (label: string): number => graph.nodes.indexOf(label)
 
     // Add nodes with labels
-    graph.nodes.forEach((node) => {
-        lines.push(`    ${escapeId(node.id)}[${escapeLabel(node.label)}]`)
+    graph.nodes.forEach((name, i) => {
+        lines.push(`    ${i}[${escapeLabel(name)}]`)
     })
 
     // Add edges with optional labels
     graph.edges.forEach((edge) => {
-        const baseEdge = `    ${escapeId(edge.from)} --> `
+        const baseEdge = `    ${nodeNameToId(edge.from)} --> `
         if (edge.label) {
-            lines.push(`${baseEdge}|${escapeLabel(edge.label)}| ${escapeId(edge.to)}`)
+            lines.push(`${baseEdge}|${escapeLabel(edge.label)}| ${nodeNameToId(edge.to)}`)
         } else {
-            lines.push(`${baseEdge}${escapeId(edge.to)}`)
+            lines.push(`${baseEdge}${nodeNameToId(edge.to)}`)
         }
     })
 

@@ -86,7 +86,7 @@
 
         <div class="divider my-8"></div>
 
-        <LangchainChat />
+        <LangchainChat model={props.interface} context={props.repoSummary.toXmlString()} />
     </div>
 {:catch error}
     <div role="alert" class="alert alert-error block">

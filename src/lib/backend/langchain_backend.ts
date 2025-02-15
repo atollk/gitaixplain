@@ -37,16 +37,11 @@ The output must strictly follow this schema:
   },
   "componentAnalysis": {
     "flowGraph": {  // A graph describing components and their interactions.
-        "nodes": [
-          {
-            "id": "string",
-            "label": "string",
-          }
-        ],
+        "nodes": ["Node Name1", "Node Name2", ...],
         "edges": [
           {
-            "from": "string", // node id
-            "to": "string",   // node id
+            "from": "string",  // node name
+            "to": "string",    // node name
             "label": "string", // optional
           }
         ]
@@ -87,28 +82,32 @@ export abstract class LangchainBaseInterface<
 
     protected abstract get supportsSystemPrompt(): boolean
 
-    private async getResponse(systemMessage: string, userMessage: string): Promise<string> {
-        const messages = this.supportsSystemPrompt
-            ? [new SystemMessage(systemMessage), new HumanMessage(userMessage)]
-            : `${systemMessage}\n\n${userMessage}`
-
-        if (this.model === undefined) this.model = this.modelGen()
-
-        const response = await this.model.invoke(messages)
-        return response.content as string
-    }
-
     private async summarizePart(path: string, content: string): Promise<string> {
-        return `<summary path="${path}">${await this.getResponse(MESSAGE_SUMMARIZE_PARTS, content)}</summary>`
+        const summary = await this.getChatResponse(MESSAGE_SUMMARIZE_PARTS, [
+            {
+                text: content,
+                byUser: true,
+            },
+        ])
+        return `<summary path="${path}">${summary}</summary>`
     }
 
-    async getChatResponse(chat: { text: string; byUser: boolean }[]): Promise<string> {
+    async getChatResponse(
+        systemMessage: string,
+        chat: { text: string; byUser: boolean }[],
+    ): Promise<string> {
         if (this.model === undefined) this.model = this.modelGen()
 
-        const messages = chat.map(({ text, byUser }) =>
-            byUser ? new HumanMessage(text) : new AIMessage(text),
-        )
+        const messages = [
+            this.supportsSystemPrompt
+                ? new SystemMessage(systemMessage)
+                : new HumanMessage(systemMessage),
+        ]
+        for (let { text, byUser } of chat) {
+            messages.push(byUser ? new HumanMessage(text) : new AIMessage(text))
+        }
 
+        console.log("getChatResponse", messages)
         const response = await this.model.invoke(messages)
         return response.content as string
     }
@@ -186,10 +185,12 @@ export abstract class LangchainBaseInterface<
 
         // TODO: summarize top levels between each other
 
-        let responseContent = await this.getResponse(
-            MESSAGE_ANALYZE_ENTIRE_REPO,
-            mergedTopLevels.map(({ xml }) => xml).join("\n"),
-        )
+        let responseContent = await this.getChatResponse(MESSAGE_ANALYZE_ENTIRE_REPO, [
+            {
+                text: mergedTopLevels.map(({ xml }) => xml).join("\n"),
+                byUser: true,
+            },
+        ])
 
         responseContent = stripBackticks(responseContent, "json")
         const parsedResponse: AiResponse = JSON.parse(responseContent)

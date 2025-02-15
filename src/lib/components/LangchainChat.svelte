@@ -10,11 +10,11 @@
 
     const messages: { text: string, byUser: boolean }[] = $state([])
 
-    const submitMessage = (ev?: SubmitEvent & { currentTarget: (EventTarget & HTMLFormElement) }) => {
+    const submitMessage = async (ev?: SubmitEvent & { currentTarget: (EventTarget & HTMLFormElement) }) => {
         ev?.preventDefault()
         messages.push({ text: editor?.getText({ blockSeparator: "\n" }) ?? "", byUser: true })
         editor!.commands!.clearContent()
-        const response = props.model.getChatResponse(messages)
+        const response = await props.model.getChatResponse(messages)
         messages.push({ text: response, byUser: false })
     }
 
@@ -49,7 +49,8 @@
 <div class="flex flex-col w-4/5">
     {#each messages as message}
         <div class={["chat", message.byUser ? "chat-end" : "chat-start"]}>
-            <div class="chat-bubble chat-bubble-primary whitespace-pre-line">
+            <div
+                class={["chat-bubble", "whitespace-pre-line", message.byUser ? "chat-bubble-primary" : "chat-bubble-secondary"]}>
                 {message.text}
             </div>
         </div>

@@ -1,4 +1,4 @@
-import { HumanMessage, SystemMessage } from "@langchain/core/messages"
+import { AIMessage, HumanMessage, SystemMessage } from "@langchain/core/messages"
 import { countTokens, stripBackticks } from "$lib/backend/util"
 import { BaseChatModel } from "@langchain/core/language_models/chat_models"
 import type { RepositorySummary } from "$lib/backend/repo_summary_backend"
@@ -102,7 +102,18 @@ export abstract class LangchainBaseInterface<
         return `<summary path="${path}">${await this.getResponse(MESSAGE_SUMMARIZE_PARTS, content)}</summary>`
     }
 
-    async analyze(repoSummary: RepositorySummary): Promise<AiResponse> {
+    async getChatResponse(chat: { text: string; byUser: boolean }[]): Promise<string> {
+        if (this.model === undefined) this.model = this.modelGen()
+
+        const messages = chat.map(({ text, byUser }) =>
+            byUser ? new HumanMessage(text) : new AIMessage(text),
+        )
+
+        const response = await this.model.invoke(messages)
+        return response.content as string
+    }
+
+    async analyzeRepo(repoSummary: RepositorySummary): Promise<AiResponse> {
         const maxTokens = this.getContextWindowSize() - countTokens(MESSAGE_SUMMARIZE_PARTS)
 
         // TODO "paths" tag

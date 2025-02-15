@@ -31,9 +31,9 @@ export abstract class AiInterface<Config extends { [property: string]: any }> {
 
     abstract get name(): ApiName
 
-    abstract getChatResponse(chat: { text: string; byUser: boolean }[]): string
+    abstract getChatResponse(chat: { text: string; byUser: boolean }[]): Promise<string>
 
-    abstract analyze(repoSummary: RepositorySummary): Promise<AiResponse>
+    abstract analyzeRepo(repoSummary: RepositorySummary): Promise<AiResponse>
 
     abstract getContextWindowSize(): number
 }

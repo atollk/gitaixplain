@@ -13,7 +13,7 @@
         repoSummary: RepositorySummary
     } = $props()
 
-    const modelResponse = $derived<Promise<AiResponse>>(props.interface.analyze(props.repoSummary))
+    const modelResponse = $derived<Promise<AiResponse>>(props.interface.analyzeRepo(props.repoSummary))
     const renderGraph = (graph?: Graph) => graph === undefined ? "" : flowGraphToMermaid(graph)
     const linkToFile = (filePath: string) => `${props.repoLink}/tree/HEAD/${filePath}`
 </script>

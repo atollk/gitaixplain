@@ -1,6 +1,6 @@
 <script lang="ts">
     import type { AiInterface } from "$lib/backend/ai_backend"
-    import { Editor } from "@tiptap/core"
+    import { Editor, Extension } from "@tiptap/core"
     import Document from "@tiptap/extension-document"
     import Paragraph from "@tiptap/extension-paragraph"
     import Text from "@tiptap/extension-text"
@@ -10,27 +10,34 @@
 
     const messages: { text: string, byUser: boolean }[] = $state([])
 
-    const submitMessage = (ev: SubmitEvent & { currentTarget: (EventTarget & HTMLFormElement) }) => {
-        ev.preventDefault()
+    const submitMessage = (ev?: SubmitEvent & { currentTarget: (EventTarget & HTMLFormElement) }) => {
+        ev?.preventDefault()
         messages.push({ text: editor?.getText({ blockSeparator: "\n" }) ?? "", byUser: true })
+        editor!.commands!.clearContent()
         const response = props.model.getChatResponse(messages)
         messages.push({ text: response, byUser: false })
-        editor?.commands?.clearContent()
     }
 
+    let editorElement: HTMLElement | undefined
     let editor: Editor | undefined
 
     onMount(() => {
+        const keybordShortcutsExtension = Extension.create({
+            addKeyboardShortcuts() {
+                return {
+                    "Control-Enter": () => {
+                        submitMessage()
+                        return true
+                    },
+                    "Shift-Enter": () => editor!.chain().selectParentNode().createParagraphNear().focus().run(),
+                }
+            },
+        })
         editor = new Editor({
-            // bind Tiptap to the `.element`
-            element: document.querySelector("#foo")!,
-            // register extensions
-            extensions: [Document, Paragraph, Text],
-            // set the initial content
+            element: editorElement,
+            extensions: [Document, Paragraph, Text, keybordShortcutsExtension],
             content: "<p></p>",
-            // place the cursor in the editor after initialization
-            autofocus: true,
-            // make the text editable (default is true)
+            autofocus: false,
             editable: true,
             // prevent loading the default CSS (which isn't much anyway)
             injectCSS: false,
@@ -49,12 +56,12 @@
     {/each}
 </div>
 
-<!--https://css-tricks.com/auto-growing-inputs-textareas/-->
 <div>
     <form onsubmit={submitMessage}>
         <div class="relative textarea textarea-bordered textarea-xs flex items-center">
-            <div id="foo" class="text-lg w-[40rem] max-h-48 overflow-scroll"></div>
-            <button class="absolute right-3 border-solid border-2 border-primary rounded-full w-6 h-6 text-sm">🡲
+            <div bind:this={editorElement} class="text-lg w-[40rem] max-h-48 overflow-scroll mr-10"></div>
+            <button type="submit"
+                    class="absolute right-3 border-solid border-2 border-primary rounded-full w-6 h-6 text-sm">🡲
             </button>
         </div>
     </form>

@@ -1,8 +1,11 @@
 import { AIMessage, HumanMessage, SystemMessage } from "@langchain/core/messages"
 import { countTokens, stripBackticks } from "$lib/backend/util"
 import { BaseChatModel } from "@langchain/core/language_models/chat_models"
-import type { RepositorySummary } from "$lib/backend/repo_summary_backend"
-import { AiInterface, type AiResponse } from "$lib/backend/ai_backend"
+import type { RepositoryDump } from "$lib/backend/repo_summary_backend"
+import { AiInterface, type AiRepoSummary } from "$lib/backend/ai_backend"
+import { Embeddings } from "@langchain/core/embeddings"
+import { VectorStore } from "@langchain/core/vectorstores"
+import { MemoryVectorStore } from "langchain/vectorstores/memory"
 
 const MESSAGE_SUMMARIZE_PARTS = `
 You will be provided with an XML file describing parts of a Git repository. 
@@ -72,15 +75,25 @@ export abstract class LangchainBaseInterface<
     Config extends { [property: string]: any },
 > extends AiInterface<Config> {
     private model?: BaseChatModel
+    private embeddings?: Embeddings
+    private vectorStore?: VectorStore
 
     protected constructor(
         config: Config,
-        protected readonly modelGen: () => BaseChatModel,
+        protected readonly modelGen: () => [BaseChatModel, Embeddings],
     ) {
         super(config)
     }
 
     protected abstract get supportsSystemPrompt(): boolean
+
+    private initialize(): void {
+        if (this.model !== undefined) return
+        const [model, embeddings] = this.modelGen()
+        this.model = model
+        this.embeddings = embeddings
+        this.vectorStore = new MemoryVectorStore(this.embeddings)
+    }
 
     private async summarizePart(path: string, content: string): Promise<string> {
         const summary = await this.getChatResponse(MESSAGE_SUMMARIZE_PARTS, [
@@ -92,11 +105,19 @@ export abstract class LangchainBaseInterface<
         return `<summary path="${path}">${summary}</summary>`
     }
 
+    async getContext(query: string): Promise<string> {
+        const x = this.vectorStore?.similaritySearch(query, 1)
+        if (x === undefined) return ""
+        const y = (await x)[0].pageContent
+        console.log("getContext", y)
+        return y
+    }
+
     async getChatResponse(
         systemMessage: string,
         chat: { text: string; byUser: boolean }[],
     ): Promise<string> {
-        if (this.model === undefined) this.model = this.modelGen()
+        this.initialize()
 
         const messages = [
             this.supportsSystemPrompt
@@ -108,12 +129,14 @@ export abstract class LangchainBaseInterface<
         }
 
         console.log("getChatResponse", messages)
-        const response = await this.model.invoke(messages)
+        const response = await this.model!.invoke(messages)
         return response.content as string
     }
 
-    async analyzeRepo(repoSummary: RepositorySummary): Promise<AiResponse> {
+    async analyzeRepo(repoSummary: RepositoryDump): Promise<AiRepoSummary> {
+        this.initialize()
         const maxTokens = this.getContextWindowSize() - countTokens(MESSAGE_SUMMARIZE_PARTS)
+        const vectorStoreDocuments: string[] = []
 
         // TODO "paths" tag
 
@@ -148,21 +171,24 @@ export abstract class LangchainBaseInterface<
                 })
 
                 // If there is only a single group, no need to summarize here.
-                if (mergedXmls.length === 1)
+                if (mergedXmls.length === 1) {
+                    const xml = mergedXmls[0]
                     return [
                         {
                             path: directoryInfo.path,
-                            xml: mergedXmls[0],
-                            tokens: countTokens(mergedXmls[0]),
+                            xml: xml,
+                            tokens: countTokens(xml),
                         },
                         null,
                     ]
+                }
 
                 // Summarize all the children groups individually.
                 let summarizedGroups: string[] = []
                 for (let xml of mergedXmls) {
                     summarizedGroups.push(await this.summarizePart(directoryInfo.path, xml))
                 }
+                vectorStoreDocuments.push(...summarizedGroups)
 
                 let completeXml = ""
                 for (let xml of summarizedGroups) completeXml += xml
@@ -181,7 +207,12 @@ export abstract class LangchainBaseInterface<
                 return [{ path: fileInfo.path, xml, tokens: countTokens(xml) }, null]
             },
         )
+
         const mergedTopLevels = Object.values(mergedTopLevelsTree.metaInfo).map((x) => x[0])
+
+        // const documents = vectorStoreDocuments.map((s) => ({ pageContent: s, metadata: {} }))
+        // console.log("documents", documents)
+        // await this.vectorStore!.addDocuments(documents)
 
         // TODO: summarize top levels between each other
 
@@ -193,7 +224,7 @@ export abstract class LangchainBaseInterface<
         ])
 
         responseContent = stripBackticks(responseContent, "json")
-        const parsedResponse: AiResponse = JSON.parse(responseContent)
+        const parsedResponse: AiRepoSummary = JSON.parse(responseContent)
         console.log(parsedResponse)
         return parsedResponse
     }

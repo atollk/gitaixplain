@@ -6,15 +6,18 @@
     import Text from "@tiptap/extension-text"
     import { onMount } from "svelte"
 
-    const props: { model: AiInterface<any>, context?: string } = $props()
+    const props: { model: AiInterface<any> } = $props()
 
     const messages: { text: string, byUser: boolean }[] = $state([])
 
     const submitMessage = async (ev?: SubmitEvent & { currentTarget: (EventTarget & HTMLFormElement) }) => {
         ev?.preventDefault()
-        messages.push({ text: editor?.getText({ blockSeparator: "\n" }) ?? "", byUser: true })
+        const userMessage = editor?.getText({ blockSeparator: "\n" }) ?? ""
+        messages.push({ text: userMessage, byUser: true })
         editor!.commands!.clearContent()
-        const systemPrompt = `Use the following context to answer questions. Be as detailed as possible, but don't make up any information that's not from the context. If you don't know an answer, say you don't know.\n\n${props.context}`
+
+        const context: string = await props.model.getContext(userMessage)
+        const systemPrompt = `Use the following context to answer questions. Be as detailed as possible, but don't make up any information that's not from the context. If you don't know an answer, say you don't know.\n\n${context}`
         const response = await props.model.getChatResponse(systemPrompt, messages)
         messages.push({ text: response, byUser: false })
     }

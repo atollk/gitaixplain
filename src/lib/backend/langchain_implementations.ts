@@ -1,7 +1,7 @@
-import { ChatGoogleGenerativeAI } from "@langchain/google-genai"
+import { ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings } from "@langchain/google-genai"
 import { ChatGroq } from "@langchain/groq"
 import { LangchainBaseInterface } from "$lib/backend/langchain_backend"
-import { ChatOllama } from "@langchain/ollama"
+import { ChatOllama, OllamaEmbeddings } from "@langchain/ollama"
 import type { ApiName } from "$lib/models"
 
 type GeminiInterfaceConfig = { readonly apiKey: string; readonly model: string }
@@ -14,14 +14,16 @@ export class GeminiInterface extends LangchainBaseInterface<GeminiInterfaceConfi
         if (model === undefined) {
             throw Error(`Invalid Gemini model: ${config.model}`)
         }
-        super(
-            config,
-            () =>
-                new ChatGoogleGenerativeAI({
-                    model: config.model,
-                    apiKey: config.apiKey,
-                }),
-        )
+        super(config, () => [
+            new ChatGoogleGenerativeAI({
+                model: config.model,
+                apiKey: config.apiKey,
+            }),
+            new GoogleGenerativeAIEmbeddings({
+                model: "text-embedding-004",
+                apiKey: config.apiKey,
+            }),
+        ])
         this.contextWindowSize = model.contextSize
     }
 
@@ -55,14 +57,13 @@ export class GroqInterface extends LangchainBaseInterface<GroqInterfaceConfig> {
         if (model === undefined) {
             throw Error(`Invalid Groq model: ${config.model}`)
         }
-        super(
-            config,
-            () =>
-                new ChatGroq({
-                    model: config.model,
-                    apiKey: config.apiKey,
-                }),
-        )
+        super(config, () => [
+            new ChatGroq({
+                model: config.model,
+                apiKey: config.apiKey,
+            }),
+            undefined /* TODO */,
+        ])
         this.contextWindowSize = model.contextSize
     }
 
@@ -98,12 +99,12 @@ export class OllamaInterface extends LangchainBaseInterface<OllamaInterfaceConfi
         super(config, () => {
             const baseModel = OllamaInterface.models["gemma2:2b"]
 
-            const model = new ChatOllama({
-                model: "gemma2:2b",
-            })
+            const model = new ChatOllama({ model: "gemma2:2b" })
             // Ollama silently cuts off content beyond the context window size, so we add a buffer to have more explicit control.
             model.numCtx = Math.min(this.getContextWindowSize() * 2, baseModel.maxContext)
-            return model
+
+            const embeddings = new OllamaEmbeddings({ model: "gemma2:2b" })
+            return [model, embeddings]
         })
     }
 

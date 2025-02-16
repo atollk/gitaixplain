@@ -72,7 +72,7 @@ class FileTree<DirectoryInfo, FileInfo> {
     }
 }
 
-export class RepositorySummary {
+export class RepositoryDump {
     constructor(
         readonly fileContent: FileTree<{ path: string }, { path: string; content: string }>,
     ) {}
@@ -94,7 +94,7 @@ export class RepositorySummary {
     }
 }
 
-async function fetchRepomixSummary(url: string): Promise<RepositorySummary> {
+async function fetchRepomixDump(url: string): Promise<RepositoryDump> {
     // Fetch summary as XML.
     const apiUrl = "https://api.repomix.com/api/pack"
     const requestBody = JSON.stringify({
@@ -170,10 +170,10 @@ async function fetchRepomixSummary(url: string): Promise<RepositorySummary> {
         .toArray()
     const rmi = rmis.reduce(mergeRMIs)
     const tree = new FileTree(rmi)
-    return new RepositorySummary(tree)
+    return new RepositoryDump(tree)
 }
 
-export async function fetchRepoSummary(url: string): Promise<RepositorySummary> {
+export async function fetchRepoSummary(url: string): Promise<RepositoryDump> {
     // return Promise.resolve(new DOMParser().parseFromString("<foo></foo>", "application/xml"))
-    return await fetchRepomixSummary(url)
+    return await fetchRepomixDump(url)
 }

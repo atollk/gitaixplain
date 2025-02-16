@@ -1,4 +1,4 @@
-import type { RepositorySummary } from "$lib/backend/repo_summary_backend"
+import type { RepositoryDump } from "$lib/backend/repo_summary_backend"
 import type { ApiName } from "$lib/models"
 
 export interface Graph {
@@ -6,7 +6,7 @@ export interface Graph {
     edges: { from: string; to: string; label?: string }[]
 }
 
-export interface AiResponse {
+export interface AiRepoSummary {
     summary?: {
         purpose?: string
     }
@@ -31,12 +31,14 @@ export abstract class AiInterface<Config extends { [property: string]: any }> {
 
     abstract get name(): ApiName
 
+    abstract getContext(query: string): Promise<string>
+
     abstract getChatResponse(
         systemMessage: string,
         chat: { text: string; byUser: boolean }[],
     ): Promise<string>
 
-    abstract analyzeRepo(repoSummary: RepositorySummary): Promise<AiResponse>
+    abstract analyzeRepo(repoDump: RepositoryDump): Promise<AiRepoSummary>
 
     abstract getContextWindowSize(): number
 }

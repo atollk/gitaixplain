@@ -5,7 +5,7 @@
     import { onMount } from "svelte"
     import LangchainExplain from "$lib/components/LangchainExplain.svelte"
     import Loading from "$lib/components/util/Loading.svelte"
-    import { fetchRepoSummary, type RepositorySummary } from "$lib/backend/repo_summary_backend"
+    import { fetchRepoSummary, type RepositoryDump } from "$lib/backend/repo_summary_backend"
     import { AiInterface } from "$lib/backend/ai_backend"
     import ConfigForm from "$lib/components/ConfigForm.svelte"
     import { GeminiInterface, GroqInterface, OllamaInterface } from "$lib/backend/langchain_implementations"
@@ -40,7 +40,7 @@
     const model = aiInterfaceFromModelName(apiName, config)
 
     let repoLink = $derived(`https://github.com/${owner}/${repo}`)
-    let repoSummary = $state<RepositorySummary>()
+    let repoSummary = $state<RepositoryDump>()
 
     async function getContent(): Promise<void> {
         repoSummary = await fetchRepoSummary(repoLink)

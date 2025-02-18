@@ -5,6 +5,7 @@
     import Paragraph from "@tiptap/extension-paragraph"
     import Text from "@tiptap/extension-text"
     import { onMount } from "svelte"
+    import { marked } from "marked"
 
     const props: { model: AiInterface<any> } = $props()
 
@@ -55,7 +56,7 @@
         <div class={["chat", message.byUser ? "chat-end" : "chat-start"]}>
             <div
                 class={["chat-bubble", "whitespace-pre-line", message.byUser ? "chat-bubble-primary" : "chat-bubble-secondary"]}>
-                {message.text}
+                {@html marked.parse(message.text)}
             </div>
         </div>
     {/each}

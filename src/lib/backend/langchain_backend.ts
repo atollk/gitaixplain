@@ -6,6 +6,8 @@ import { AiInterface, type AiRepoSummary } from "$lib/backend/ai_backend"
 import { Embeddings } from "@langchain/core/embeddings"
 import { VectorStore } from "@langchain/core/vectorstores"
 import { MemoryVectorStore } from "langchain/vectorstores/memory"
+import type { DocumentInterface } from "@langchain/core/documents"
+import { CharacterTextSplitter } from "@langchain/textsplitters"
 
 const MESSAGE_SUMMARIZE_PARTS = `
 You will be provided with an XML file describing parts of a Git repository. 
@@ -136,7 +138,6 @@ export abstract class LangchainBaseInterface<
     async analyzeRepo(repoSummary: RepositoryDump): Promise<AiRepoSummary> {
         this.initialize()
         const maxTokens = this.getContextWindowSize() - countTokens(MESSAGE_SUMMARIZE_PARTS)
-        const vectorStoreDocuments: string[] = []
 
         // TODO "paths" tag
 
@@ -188,7 +189,6 @@ export abstract class LangchainBaseInterface<
                 for (let xml of mergedXmls) {
                     summarizedGroups.push(await this.summarizePart(directoryInfo.path, xml))
                 }
-                vectorStoreDocuments.push(...summarizedGroups)
 
                 let completeXml = ""
                 for (let xml of summarizedGroups) completeXml += xml
@@ -209,10 +209,36 @@ export abstract class LangchainBaseInterface<
         )
 
         const mergedTopLevels = Object.values(mergedTopLevelsTree.metaInfo).map((x) => x[0])
+        const completeXml = {
+            path: "",
+            xml: mergedTopLevels.map(({ xml }) => xml).join("\n"),
+            tokens: mergedTopLevels.reduce((n, { tokens }) => n + tokens, 0),
+        }
 
-        // const documents = vectorStoreDocuments.map((s) => ({ pageContent: s, metadata: {} }))
-        // console.log("documents", documents)
-        // await this.vectorStore!.addDocuments(documents)
+        let vectorStoreDocuments: DocumentInterface[]
+        if (completeXml.tokens <= maxTokens) {
+            vectorStoreDocuments = [
+                { pageContent: completeXml.xml, metadata: { path: completeXml.path } },
+            ]
+        } else {
+            const documents: DocumentInterface[] = []
+            const textSplitter = new CharacterTextSplitter({ chunkSize: 1000, chunkOverlap: 100 })
+            await repoSummary.fileContent.mapAsync(
+                async (a, b) => [a, b],
+                async (fileInfo) => {
+                    const split = await textSplitter.createDocuments(
+                        [fileInfo.content],
+                        [{ path: fileInfo.path }],
+                    )
+                    documents.push(...split)
+                    return [fileInfo, null]
+                },
+            )
+            vectorStoreDocuments = documents
+        }
+
+        console.log("documents", vectorStoreDocuments)
+        await this.vectorStore!.addDocuments(vectorStoreDocuments)
 
         // TODO: summarize top levels between each other
 

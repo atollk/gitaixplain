@@ -50,7 +50,7 @@ Adding up the function counts from all files results in a total of **50** functi
 </main>
 
 <style>
-    .marked ul {
+    .marked :global(ul) {
         list-style: disc;
     }
 </style>

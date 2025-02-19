@@ -55,7 +55,7 @@
     {#each messages as message}
         <div class={["chat", message.byUser ? "chat-end" : "chat-start"]}>
             <div
-                class={["chat-bubble", "whitespace-pre-line", message.byUser ? "chat-bubble-primary" : "chat-bubble-secondary"]}>
+                class={["marked", "chat-bubble", "whitespace-pre-line", message.byUser ? "chat-bubble-primary" : "chat-bubble-secondary"]}>
                 {@html marked.parse(message.text)}
             </div>
         </div>
@@ -72,3 +72,9 @@
         </div>
     </form>
 </div>
+
+<style>
+    .marked :global(ul) {
+        list-style: disc;
+    }
+</style>

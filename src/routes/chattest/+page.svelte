@@ -2,6 +2,7 @@
     import Header from "$lib/components/Header.svelte"
     import LangchainChat from "$lib/components/LangchainChat.svelte"
     import { GeminiInterface } from "$lib/backend/langchain_implementations"
+    import { fetchRepoSummary } from "$lib/backend/repo_summary_backend"
 
     const valid = () => {
         const x = document.getElementById("foo") as HTMLInputElement
@@ -19,5 +20,11 @@
         <input id="foo" onfocusout={valid} type="text" class="input validator" placeholder="foo" onsubmit={valid} />
         <button class="btn" type="submit">X</button>
     </form>
+
+    <div>
+        {#await fetchRepoSummary("https://github.com/isomorphic-git/lightning-fs") then foo}
+            {foo}
+        {/await}
+    </div>
 
 </main>

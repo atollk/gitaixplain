@@ -40,6 +40,7 @@
   },
   "dependencies": {
     "@huggingface/transformers": "^3.2.4",
+    "@isomorphic-git/lightning-fs": "^4.6.0",
     "@langchain/core": "^0.3.39",
     "@langchain/google-genai": "^0.1.7",
     "@langchain/google-vertexai": "^0.1.6",
@@ -52,6 +53,7 @@
     "@tiptap/pm": "^2.11.5",
     "@tiptap/starter-kit": "^2.11.5",
     "colorjs.io": "^0.5.2",
+    "isomorphic-git": "^1.29.0",
     "langchain": "^0.3.10",
     "marked": "^15.0.7",
     "mermaid": "^11.4.1",

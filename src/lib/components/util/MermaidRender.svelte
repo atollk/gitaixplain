@@ -23,7 +23,7 @@
                     createPanZoom(svgElement, {})
                 }
             })
-        })
+        }).catch((err) => console.error(`Could not render Mermaid: ${err}`))
     })
 </script>
 

@@ -99,6 +99,7 @@ export class RepositoryDump {
 }
 
 async function fetchIsomorphicDump(url: string): Promise<RepositoryDump> {
+    // TODO: for unknown reasons, the token count from this function is much larger than from Repomix
     // Initialize and fetch git repository.
     // @ts-ignore
     const fsOptions: LightningFS.Options = { wipe: true }
@@ -130,9 +131,8 @@ async function fetchIsomorphicDump(url: string): Promise<RepositoryDump> {
     // Create a map from file path to content.
     const fileNodesMap = new Map<string, string>()
     for (let info of fileInfos) {
-        if (info.content !== null) {
-            fileNodesMap.set(info.filename, info.content)
-        }
+        if (info.filename.startsWith(".git/")) continue
+        if (info.content !== null) fileNodesMap.set(info.filename, info.content)
     }
 
     // Create a tree structure of contents.

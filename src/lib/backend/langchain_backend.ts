@@ -250,6 +250,7 @@ export abstract class LangchainBaseInterface<
         ])
 
         responseContent = stripBackticks(responseContent, "json")
+        console.log("responseContent", responseContent)
         const parsedResponse: AiRepoSummary = JSON.parse(responseContent)
         console.log(parsedResponse)
         return parsedResponse

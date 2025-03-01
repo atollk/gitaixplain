@@ -14,7 +14,11 @@
     const renderPromise = mermaid.render(props.svgId, props.mermaidSpec)
 
     onMount(() => {
-        initMermaid()
+        try {
+            initMermaid()
+        } catch (err) {
+            console.error(`Could not render Mermaid: ${err}`)
+        }
 
         renderPromise.then(() => {
             // Wait for next tick to ensure the SVG is in the DOM

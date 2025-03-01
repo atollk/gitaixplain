@@ -55,7 +55,7 @@
         <div>
             {#if apiName === "Gemini"}
                 <div class="flex flex-col gap-2">
-                    <label class="input input-bordered flex items-center gap-2">
+                    <label class="input input-bordered flex items-center gap-2 select-none cursor-default">
                         API Key:
                         <input type=text class="grow" bind:value={ config.apiKey } />
                     </label>

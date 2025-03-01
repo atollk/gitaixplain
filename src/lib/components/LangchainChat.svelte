@@ -62,7 +62,7 @@
     {#each messages as message}
         <div class={["chat", message.byUser ? "chat-end" : "chat-start"]}>
             <div
-                class={["marked", "chat-bubble", "whitespace-pre-line", message.byUser ? "chat-bubble-primary" : "chat-bubble-secondary"]}>
+                class={["marked", "chat-bubble", "text-wrap", message.byUser ? "chat-bubble-primary" : "chat-bubble-secondary"]}>
                 {@html marked.parse(message.text)}
             </div>
         </div>
@@ -79,7 +79,7 @@
 
 <div class="contents">
     <form onsubmit={submitMessage} class="contents">
-        <div class="relative textarea textarea-bordered textarea-xs min-h-0 flex items-center">
+        <div class="relative textarea textarea-bordered textarea-xs w-[40rem] min-h-0 flex items-center">
             <div bind:this={editorElement} class="text-lg w-[40rem] max-h-48 overflow-scroll mr-10"></div>
             <button type="submit"
                     class="absolute right-3 border-solid border-2 border-primary rounded-full w-6 h-6 text-sm">🡲

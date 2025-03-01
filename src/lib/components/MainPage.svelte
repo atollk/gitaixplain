@@ -2,18 +2,26 @@
     import { page } from "$app/state"
     import Header from "$lib/components/Header.svelte"
     import { apiList, type ApiName } from "$lib/models"
-    import { onMount } from "svelte"
     import LangchainExplain from "$lib/components/LangchainExplain.svelte"
     import Loading from "$lib/components/util/Loading.svelte"
-    import { fetchRepoSummary, type RepositoryDump } from "$lib/backend/repo_summary_backend"
+    import { fetchRepoSummary } from "$lib/backend/repo_summary_backend"
     import { AiInterface } from "$lib/backend/ai_backend"
     import ConfigForm from "$lib/components/ConfigForm.svelte"
     import { GeminiInterface, GroqInterface, OllamaInterface } from "$lib/backend/langchain_implementations"
+    import { goto } from "$app/navigation"
 
-    const { owner, repo } = page.params
-    const urlParams = page.url.searchParams
-    const apiName = urlParams.get("api") as ApiName ?? apiList[0]
-    const config = JSON.parse(urlParams.get("config") ?? "{}")
+    const urlParams = $derived(page.url.searchParams)
+    const apiName = $derived(urlParams.get("api") as ApiName ?? apiList[0])
+    const config = $derived(JSON.parse(urlParams.get("config") ?? "{}"))
+    const gitUrl = $derived.by(() => {
+        const url = urlParams.get("git")
+        if (url === null) {
+            goto("/")
+            throw "No git URL specified"
+        }
+        return url
+    })
+    $inspect(urlParams)
 
     function aiInterfaceFromModelName(
         apiName: ApiName,
@@ -37,31 +45,24 @@
         }
     }
 
-    const model = aiInterfaceFromModelName(apiName, config)
+    const model = $derived(aiInterfaceFromModelName(apiName, config))
 
-    let repoLink = $derived(`https://github.com/${owner}/${repo}`)
-    let repoSummary = $state<RepositoryDump>()
-
-    async function getContent(): Promise<void> {
-        repoSummary = await fetchRepoSummary(repoLink)
-    }
-
-    onMount(async () => await getContent())
+    let repoSummary = $derived(fetchRepoSummary(gitUrl))
 </script>
 
 <main class="container mx-auto flex max-w-6xl flex-col items-center px-4 py-8">
     <Header />
     <ConfigForm
-        initialUrl={repoLink}
+        initialUrl={gitUrl}
         initialApiName={apiName}
         initialConfig={config}
     />
 
     <div class="divider my-8"></div>
 
-    {#if repoSummary === undefined}
+    {#await repoSummary}
         <Loading message="Loading your repository" />
-    {:else}
-        <LangchainExplain repoLink={repoLink} interface={model} {repoSummary} />
-    {/if}
+    {:then repoSummary}
+        <LangchainExplain repoLink={gitUrl} interface={model} {repoSummary} />
+    {/await}
 </main>

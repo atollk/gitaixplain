@@ -13,7 +13,7 @@
     let apiName = $state(props.initialApiName)
     let config = $state(props.initialConfig)
 
-    function handleSubmit(e: SubmitEvent): void {
+    async function handleSubmit(e: SubmitEvent): Promise<void> {
         e.preventDefault()
         const urlPattern = /^(?:https:\/\/)?github\.com\/([^\/]+)\/([^\/]+)/
         const match = githubUrl.match(urlPattern)
@@ -28,10 +28,10 @@
         const queryParams = new URLSearchParams({
             api: apiName,
             config: JSON.stringify(config),
+            git: `https://github.com/${owner}/${repo}`,
         })
 
-        // TODO: actually force a refresh, don't just change the contents of the URL bar
-        goto(`/${owner}/${repo}?${queryParams}`)
+        await goto(`?${queryParams}`)
     }
 </script>
 

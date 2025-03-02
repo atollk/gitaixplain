@@ -21,7 +21,6 @@
         }
         return url
     })
-    $inspect(urlParams)
 
     function aiInterfaceFromModelName(
         apiName: ApiName,

@@ -1,3 +1,5 @@
+import { default as Color } from "colorjs.io"
+import { type MermaidConfig } from "mermaid"
 import type { Graph } from "$lib/backend/ai_backend"
 
 export function initMermaid() {

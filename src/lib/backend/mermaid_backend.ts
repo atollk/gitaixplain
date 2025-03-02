@@ -26,7 +26,6 @@ export function initMermaid() {
 }
 
 export function flowGraphToMermaid(graph: Graph): string {
-    return ""
     const lines: string[] = ["graph TD;"]
 
     const escapeLabel = (label: string): string => `"${label.replace('"', "'")}"`

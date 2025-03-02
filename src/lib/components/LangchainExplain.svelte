@@ -1,9 +1,11 @@
 <script lang="ts">
-    import { AiInterface, type AiRepoSummary } from "$lib/backend/ai_backend"
+    import { AiInterface, type AiRepoSummary, type Graph } from "$lib/backend/ai_backend"
     import { countTokens } from "$lib/backend/util"
     import Loading from "$lib/components/util/Loading.svelte"
     import type { RepositoryDump } from "$lib/backend/repo_summary_backend"
     import LangchainChat from "$lib/components/LangchainChat.svelte"
+    import MermaidRender from "$lib/components/util/MermaidRender.svelte"
+    import { flowGraphToMermaid } from "$lib/backend/mermaid_backend"
 
     let props: {
         repoLink: string
@@ -12,7 +14,7 @@
     } = $props()
 
     const modelResponse = $derived<Promise<AiRepoSummary>>(props.interface.analyzeRepo(props.repoSummary))
-    // const renderGraph = (graph?: Graph) => graph === undefined ? "" : flowGraphToMermaid(graph)
+    const renderGraph = (graph?: Graph) => graph === undefined ? "" : flowGraphToMermaid(graph)
     const linkToFile = (filePath: string) => `${props.repoLink}/tree/HEAD/${filePath}`
 </script>
 
@@ -50,10 +52,10 @@
 
         <div class="divider my-8"></div>
 
-        <!--        <MermaidRender-->
-        <!--            svgId="componentFlowMermaid"-->
-        <!--            mermaidSpec={renderGraph(modelResponse?.componentAnalysis?.flowGraph)}-->
-        <!--        />-->
+        <MermaidRender
+            svgId="componentFlowMermaid"
+            mermaidSpec={renderGraph(modelResponse?.componentAnalysis?.flowGraph)}
+        />
 
         <div class="divider my-8"></div>
 

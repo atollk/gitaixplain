@@ -1,3 +1,8 @@
+import { default as LightningFS } from "@isomorphic-git/lightning-fs"
+import git, { WORKDIR } from "isomorphic-git"
+import http from "isomorphic-git/http/web"
+import { Buffer } from "buffer"
+
 type RepositoryMetaInfo<DirectoryInfo, FileInfo> = {
     [pathSegment: string]:
         | [DirectoryInfo, RepositoryMetaInfo<DirectoryInfo, FileInfo>]
@@ -72,10 +77,6 @@ class FileTree<DirectoryInfo, FileInfo> {
     }
 }
 
-import { default as LightningFS } from "@isomorphic-git/lightning-fs"
-import git, { WORKDIR } from "isomorphic-git"
-import http from "isomorphic-git/http/web"
-
 export class RepositoryDump {
     constructor(
         readonly fileContent: FileTree<{ path: string }, { path: string; content: string }>,
@@ -105,6 +106,7 @@ async function fetchIsomorphicDump(url: string): Promise<RepositoryDump> {
     const fsOptions: LightningFS.Options = { wipe: true }
     const fs = new LightningFS("fs", fsOptions)
     const dir = "/"
+    window.Buffer = Buffer
     await git.clone({ fs, http, dir, url, corsProxy: "https://cors.isomorphic-git.org", depth: 1 })
 
     // Load git repository into memory.
@@ -255,7 +257,5 @@ async function fetchRepomixDump(url: string): Promise<RepositoryDump> {
 
 export async function fetchRepoSummary(url: string): Promise<RepositoryDump> {
     // return Promise.resolve(new DOMParser().parseFromString("<foo></foo>", "application/xml"))
-    const x = await fetchIsomorphicDump(url)
-    console.log(x)
-    return x
+    return await fetchIsomorphicDump(url)
 }

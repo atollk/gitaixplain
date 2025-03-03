@@ -1,5 +1,6 @@
-import { get_encoding } from "tiktoken"
 import { default as LightningFS } from "@isomorphic-git/lightning-fs"
+import { Tiktoken } from "js-tiktoken/lite"
+import o200k_base from "js-tiktoken/ranks/o200k_base"
 
 export function stripBackticks(s: string, code: string): string {
     const regex = new RegExp(`^\\s*\`\`\`${code}(.+)\`\`\`\\s*$`, "s")
@@ -19,14 +20,10 @@ class TokenCounter {
         const downloadUri =
             "https://openaipublic.blob.core.windows.net/encodings/o200k_base.tiktoken"
         const downloadHash = "446a9538cb6c348e3516120d7c08b09f57c36495e2acfffe59a5bf8b0cfb1a2d"
+        return ""
     }
 }
 
 export function countTokens(content: string): number {
-    const encoder = get_encoding("o200k_base")
-    try {
-        return encoder.encode_ordinary(content).length
-    } finally {
-        encoder.free()
-    }
+    return new Tiktoken(o200k_base).encode(content).length
 }

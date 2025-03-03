@@ -1,6 +1,6 @@
 import { default as Color } from "colorjs.io"
-import type { Graph } from "$lib/backend/ai_backend"
 import mermaid, { type MermaidConfig } from "mermaid"
+import type { Graph } from "$lib/backend/ai_backend"
 
 export function initMermaid() {
     const themeColors = extractThemeColorsFromDOM()
@@ -26,7 +26,6 @@ export function initMermaid() {
 }
 
 export function flowGraphToMermaid(graph: Graph): string {
-    console.log(graph)
     const lines: string[] = ["graph TD;"]
 
     const escapeLabel = (label: string): string => `"${label.replace('"', "'")}"`

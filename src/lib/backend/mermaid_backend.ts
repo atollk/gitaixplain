@@ -1,5 +1,6 @@
 import { default as Color } from "colorjs.io"
 import type { Graph } from "$lib/backend/ai_backend"
+import mermaid, { type MermaidConfig } from "mermaid"
 
 export function initMermaid() {
     const themeColors = extractThemeColorsFromDOM()

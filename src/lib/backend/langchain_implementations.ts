@@ -103,7 +103,7 @@ export class OllamaInterface extends LangchainBaseInterface<OllamaInterfaceConfi
             // Ollama silently cuts off content beyond the context window size, so we add a buffer to have more explicit control.
             model.numCtx = Math.min(this.getContextWindowSize() * 2, baseModel.maxContext)
 
-            const embeddings = new OllamaEmbeddings({ model: "gemma2:2b" })
+            const embeddings = new OllamaEmbeddings({ model: "mxbai-embed-large" })
             return [model, embeddings]
         })
     }

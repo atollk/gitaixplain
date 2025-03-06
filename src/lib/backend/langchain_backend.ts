@@ -79,6 +79,7 @@ export abstract class LangchainBaseInterface<
     private model?: BaseChatModel
     private embeddings?: Embeddings
     private vectorStore?: VectorStore
+    private vectorStoreLength: number = 0
 
     protected constructor(
         config: Config,
@@ -108,9 +109,17 @@ export abstract class LangchainBaseInterface<
     }
 
     async getContext(query: string): Promise<string> {
-        const x = this.vectorStore?.similaritySearch(query, 1)
-        if (x === undefined) return ""
-        return (await x)[0].pageContent
+        if (this.embeddings === undefined || this.vectorStore === undefined)
+            throw Error("Cannot get documents from uninitialized vector store.")
+        // For some reason, we need to manually select the best match here even though it seems like LangChain should do that for us.
+        const embed = await this.embeddings.embedQuery(query)
+        const documents = await this.vectorStore?.similaritySearchVectorWithScore(
+            embed,
+            this.vectorStoreLength,
+        )
+        documents.sort((lhs, rhs) => rhs[1] - lhs[1])
+        const bestDocument = documents[0][0]
+        return bestDocument.pageContent
     }
 
     async getChatResponse(
@@ -139,8 +148,6 @@ export abstract class LangchainBaseInterface<
         const maxTokens = this.getContextWindowSize() - countTokens(MESSAGE_SUMMARIZE_PARTS)
 
         // TODO "paths" tag
-
-        const timestamp = Date.now()
 
         const mergedTopLevelsTree = await repositoryDump.fileContent.mapAsync<
             never,
@@ -217,6 +224,7 @@ export abstract class LangchainBaseInterface<
         }
 
         let vectorStoreDocuments: DocumentInterface[]
+
         if (completeXml.tokens <= maxTokens) {
             vectorStoreDocuments = [
                 { pageContent: completeXml.xml, metadata: { path: completeXml.path } },
@@ -238,8 +246,7 @@ export abstract class LangchainBaseInterface<
             vectorStoreDocuments = documents
         }
 
-        console.log("documents", vectorStoreDocuments)
-        console.log("analyzeRepo end", Date.now() - timestamp)
+        this.vectorStoreLength = vectorStoreDocuments.length
         await this.vectorStore!.addDocuments(vectorStoreDocuments)
 
         // TODO: summarize top levels between each other
@@ -253,8 +260,6 @@ export abstract class LangchainBaseInterface<
 
         responseContent = stripBackticks(responseContent, "json")
         console.log("responseContent", responseContent)
-        const parsedResponse: AiRepoSummary = JSON.parse(responseContent)
-        console.log(parsedResponse)
-        return parsedResponse
+        return JSON.parse(responseContent)
     }
 }

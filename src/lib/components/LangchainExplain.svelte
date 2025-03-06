@@ -92,5 +92,11 @@
     <div role="alert" class="alert alert-error block">
         Error while loading the response.
         <p>{error}</p>
+        <br />
+        You can still attempt to chat with the model below.
     </div>
+
+    <div class="divider my-8"></div>
+
+    <LangchainChat model={props.interface} />
 {/await}

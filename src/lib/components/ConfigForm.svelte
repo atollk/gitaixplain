@@ -2,6 +2,7 @@
     import { goto } from "$app/navigation"
     import { apiList, type ApiName } from "$lib/models"
     import { GeminiInterface, GroqInterface } from "$lib/backend/langchain_implementations"
+    import { base } from "$app/paths"
 
     let { ...props }: {
         initialUrl: string
@@ -31,7 +32,7 @@
             git: `https://github.com/${owner}/${repo}`,
         })
 
-        await goto(`?${queryParams}`)
+        await goto(`${base}/repository/?${queryParams}`)
     }
 </script>
 

@@ -37,6 +37,7 @@ export function flowGraphToMermaid(graph: Graph): string {
     })
 
     // Add edges with optional labels
+    // TODO: if the edge label doesn't actually exist, add it as a node
     graph.edges.forEach((edge) => {
         const baseEdge = `    ${nodeNameToId(edge.from)} --> `
         if (edge.label) {

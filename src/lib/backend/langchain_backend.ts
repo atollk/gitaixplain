@@ -1,5 +1,5 @@
 import { AIMessage, HumanMessage, SystemMessage } from "@langchain/core/messages"
-import { countTokens, stripBackticks } from "$lib/backend/util"
+import { approximateTokens, countTokens, stripBackticks } from "$lib/backend/util"
 import { BaseChatModel } from "@langchain/core/language_models/chat_models"
 import type { RepositoryDump } from "$lib/backend/repo_summary_backend"
 import { AiInterface, type AiRepoSummary } from "$lib/backend/ai_backend"
@@ -110,9 +110,7 @@ export abstract class LangchainBaseInterface<
     async getContext(query: string): Promise<string> {
         const x = this.vectorStore?.similaritySearch(query, 1)
         if (x === undefined) return ""
-        const y = (await x)[0].pageContent
-        console.log("getContext", y)
-        return y
+        return (await x)[0].pageContent
     }
 
     async getChatResponse(
@@ -135,13 +133,16 @@ export abstract class LangchainBaseInterface<
         return response.content as string
     }
 
-    async analyzeRepo(repoSummary: RepositoryDump): Promise<AiRepoSummary> {
+    async analyzeRepo(repositoryDump: RepositoryDump): Promise<AiRepoSummary> {
+        // TODO: exclude binary files
         this.initialize()
         const maxTokens = this.getContextWindowSize() - countTokens(MESSAGE_SUMMARIZE_PARTS)
 
         // TODO "paths" tag
 
-        const mergedTopLevelsTree = await repoSummary.fileContent.mapAsync<
+        const timestamp = Date.now()
+
+        const mergedTopLevelsTree = await repositoryDump.fileContent.mapAsync<
             never,
             { path: string; xml: string; tokens: number }
         >(
@@ -178,7 +179,7 @@ export abstract class LangchainBaseInterface<
                         {
                             path: directoryInfo.path,
                             xml: xml,
-                            tokens: countTokens(xml),
+                            tokens: approximateTokens(xml),
                         },
                         null,
                     ]
@@ -196,7 +197,7 @@ export abstract class LangchainBaseInterface<
                     {
                         path: directoryInfo.path,
                         xml: completeXml,
-                        tokens: countTokens(completeXml),
+                        tokens: approximateTokens(completeXml),
                     },
                     null,
                 ]
@@ -204,7 +205,7 @@ export abstract class LangchainBaseInterface<
             async (fileInfo) => {
                 await new Promise((r) => setTimeout(r, 10))
                 const xml = `<file path=${fileInfo.path}>${fileInfo.content}</file>`
-                return [{ path: fileInfo.path, xml, tokens: countTokens(xml) }, null]
+                return [{ path: fileInfo.path, xml, tokens: approximateTokens(xml) }, null]
             },
         )
 
@@ -223,7 +224,7 @@ export abstract class LangchainBaseInterface<
         } else {
             const documents: DocumentInterface[] = []
             const textSplitter = new CharacterTextSplitter({ chunkSize: 1000, chunkOverlap: 100 })
-            await repoSummary.fileContent.mapAsync(
+            await repositoryDump.fileContent.mapAsync(
                 async (a, b) => [a, b],
                 async (fileInfo) => {
                     const split = await textSplitter.createDocuments(
@@ -238,6 +239,7 @@ export abstract class LangchainBaseInterface<
         }
 
         console.log("documents", vectorStoreDocuments)
+        console.log("analyzeRepo end", Date.now() - timestamp)
         await this.vectorStore!.addDocuments(vectorStoreDocuments)
 
         // TODO: summarize top levels between each other

@@ -12,6 +12,46 @@ type RepositoryMetaInfo<DirectoryInfo, FileInfo> = {
 class FileTree<DirectoryInfo, FileInfo> {
     constructor(readonly metaInfo: RepositoryMetaInfo<DirectoryInfo, FileInfo>) {}
 
+    static fromFileContents(
+        fileNodesMap: Map<string, string>,
+    ): FileTree<{ path: string }, { path: string; content: string }> {
+        type RMI = RepositoryMetaInfo<{ path: string }, { path: string; content: string }>
+        const mergeRMIs = (lhs: RMI | undefined, rhs: RMI | undefined): RMI => {
+            if (lhs === undefined) return rhs ?? {}
+            if (rhs === undefined) return lhs
+            const result: RMI = {}
+            for (let key of Object.keys({ ...lhs, ...rhs })) {
+                const [lhsV, rhsV] = [lhs[key], rhs[key]]
+                if (lhsV === undefined) {
+                    result[key] = rhsV
+                } else if (rhsV === undefined) {
+                    result[key] = lhsV
+                } else {
+                    const mergedRmis = mergeRMIs(lhsV[1] ?? {}, rhsV[1] ?? {})
+                    result[key] = [lhsV[0] ?? rhsV[0], mergedRmis]
+                }
+            }
+            return result
+        }
+        const rmis: RMI[] = fileNodesMap
+            .entries()
+            .map(([path, content]) => {
+                let pathSegments = path.split("/")
+                let subRmi: RMI[string]
+                subRmi = [{ path, content }, null] as const
+                for (let i = pathSegments.length - 2; i >= 0; i--) {
+                    subRmi = [
+                        { path: pathSegments.slice(0, i + 1).join("/") },
+                        { [pathSegments[i + 1]]: subRmi },
+                    ] as const
+                }
+                return { [pathSegments[0]]: subRmi }
+            })
+            .toArray()
+        const rmi = rmis.reduce(mergeRMIs)
+        return new FileTree(rmi)
+    }
+
     map<NewDirectoryInfo, NewFileInfo>(
         directoryMapper: (
             directoryInfo: DirectoryInfo,
@@ -99,8 +139,15 @@ export class RepositoryDump {
     }
 }
 
+function fileIsBinary(content: Uint8Array): boolean {
+    const checkBytes = Math.min(content.length / 2, 8000)
+    for (let i = 0; i < checkBytes; i++) {
+        if (content[i] === 0) return true
+    }
+    return false
+}
+
 async function fetchIsomorphicDump(url: string): Promise<RepositoryDump> {
-    // TODO: for unknown reasons, the token count from this function is much larger than from Repomix
     // Initialize and fetch git repository.
     // @ts-ignore
     const fsOptions: LightningFS.Options = { wipe: true }
@@ -124,7 +171,11 @@ async function fetchIsomorphicDump(url: string): Promise<RepositoryDump> {
             const rawContent = await workdirEntry?.content()
             let content = null
             if (rawContent !== undefined && typeof rawContent === "object") {
-                content = textDecoder.decode(rawContent)
+                if (!fileIsBinary(rawContent)) {
+                    content = textDecoder.decode(rawContent)
+                } else {
+                    console.log(`skipping ${filename}`)
+                }
             }
             return { filename, content }
         },
@@ -138,41 +189,7 @@ async function fetchIsomorphicDump(url: string): Promise<RepositoryDump> {
     }
 
     // Create a tree structure of contents.
-    type RMI = RepositoryMetaInfo<{ path: string }, { path: string; content: string }>
-    const mergeRMIs = (lhs: RMI | undefined, rhs: RMI | undefined): RMI => {
-        if (lhs === undefined) return rhs ?? {}
-        if (rhs === undefined) return lhs
-        const result: RMI = {}
-        for (let key of Object.keys({ ...lhs, ...rhs })) {
-            const [lhsV, rhsV] = [lhs[key], rhs[key]]
-            if (lhsV === undefined) {
-                result[key] = rhsV
-            } else if (rhsV === undefined) {
-                result[key] = lhsV
-            } else {
-                const mergedRmis = mergeRMIs(lhsV[1] ?? {}, rhsV[1] ?? {})
-                result[key] = [lhsV[0] ?? rhsV[0], mergedRmis]
-            }
-        }
-        return result
-    }
-    const rmis: RMI[] = fileNodesMap
-        .entries()
-        .map(([path, content]) => {
-            let pathSegments = path.split("/")
-            let subRmi: RMI[string]
-            subRmi = [{ path, content }, null] as const
-            for (let i = pathSegments.length - 2; i >= 0; i--) {
-                subRmi = [
-                    { path: pathSegments.slice(0, i + 1).join("/") },
-                    { [pathSegments[i + 1]]: subRmi },
-                ] as const
-            }
-            return { [pathSegments[0]]: subRmi }
-        })
-        .toArray()
-    const rmi = rmis.reduce(mergeRMIs)
-    const tree = new FileTree(rmi)
+    const tree = FileTree.fromFileContents(fileNodesMap)
     return new RepositoryDump(tree)
 }
 

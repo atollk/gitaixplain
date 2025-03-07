@@ -3,6 +3,7 @@ import { ChatGroq } from "@langchain/groq"
 import { LangchainBaseInterface } from "$lib/backend/langchain_backend"
 import { ChatOllama, OllamaEmbeddings } from "@langchain/ollama"
 import type { ApiName } from "$lib/models"
+import { HuggingFaceTransformersEmbeddings } from "@langchain/community/embeddings/huggingface_transformers"
 
 type GeminiInterfaceConfig = { readonly apiKey: string; readonly model: string }
 
@@ -62,7 +63,8 @@ export class GroqInterface extends LangchainBaseInterface<GroqInterfaceConfig> {
                 model: config.model,
                 apiKey: config.apiKey,
             }),
-            undefined /* TODO */,
+            // TODO: do the embeddings setup async
+            new HuggingFaceTransformersEmbeddings({ model: "Xenova/all-MiniLM-L6-v2" }),
         ])
         this.contextWindowSize = model.contextSize
     }
@@ -99,7 +101,14 @@ export class OllamaInterface extends LangchainBaseInterface<OllamaInterfaceConfi
         super(config, () => {
             const baseModel = OllamaInterface.models["gemma2:2b"]
 
-            const model = new ChatOllama({ model: "gemma2:2b" })
+            const model = new ChatOllama({
+                model: "gemma2:2b",
+                checkOrPullModel: true,
+                headers: new Headers([
+                    ["x-stainless-retry-count", ""],
+                    ["x-stainless-timeout", ""],
+                ]),
+            })
             // Ollama silently cuts off content beyond the context window size, so we add a buffer to have more explicit control.
             model.numCtx = Math.min(this.getContextWindowSize() * 2, baseModel.maxContext)
 

@@ -56,10 +56,13 @@
         <div>
             {#if apiName === "Gemini"}
                 <div class="flex flex-col gap-2">
-                    <label class="input input-bordered flex items-center gap-2 select-none cursor-default">
-                        API Key:
-                        <input type=text class="grow" bind:value={ config.apiKey } />
-                    </label>
+                    <div class="flex items-center">
+                        <label class="input input-bordered flex items-center gap-2 select-none cursor-default">
+                            API Key:
+                            <input type=text class="grow" bind:value={ config.apiKey } />
+                        </label>
+                        <div class="badge badge-info badge-xs">?</div>
+                    </div>
 
                     <select bind:value={config.model} class="select select-bordered w-full max-w-xs">
                         <option disabled selected>Model</option>

@@ -13,8 +13,10 @@
         repoSummary: RepositoryDump
     } = $props()
 
-    const modelResponse = $derived<Promise<AiRepoSummary>>(props.interface.analyzeRepo(props.repoSummary))
-    const renderGraph = (graph?: Graph) => graph === undefined ? "" : flowGraphToMermaid(graph)
+    const modelResponse = $derived<Promise<AiRepoSummary>>(
+        props.interface.analyzeRepo(props.repoSummary),
+    )
+    const renderGraph = (graph?: Graph) => (graph === undefined ? "" : flowGraphToMermaid(graph))
     const linkToFile = (filePath: string) => `${props.repoLink}/tree/HEAD/${filePath}`
 </script>
 
@@ -65,7 +67,9 @@
                 <ul class="list-disc">
                     {#each modelResponse?.keyFiles ?? [] as keyFile}
                         <li>
-                            <a class="font-bold" href={linkToFile(keyFile?.path ?? "")}>{keyFile.path}</a>
+                            <a class="font-bold" href={linkToFile(keyFile?.path ?? "")}
+                            >{keyFile.path}</a
+                            >
                             <ul>
                                 <li>Purpose: {keyFile.purpose}</li>
                                 <li>Connections: {keyFile.connections}</li>
@@ -86,6 +90,10 @@
 
         <div class="divider my-8"></div>
 
+        <div class="mb-10">
+            <h6 class="h6">Chat about the repository</h6>
+        </div>
+
         <LangchainChat model={props.interface} />
     </div>
 {:catch error}
@@ -98,7 +106,9 @@
 
     <div class="divider my-8"></div>
 
-    <h4>Chat about the repository</h4>
+    <div class="mb-10">
+        <h6 class="h6">Chat about the repository</h6>
+    </div>
 
     <LangchainChat model={props.interface} />
 {/await}

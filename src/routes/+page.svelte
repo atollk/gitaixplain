@@ -2,6 +2,7 @@
     import Header from "$lib/components/Header.svelte"
     import ConfigForm from "$lib/components/ConfigForm.svelte"
     import { apiList } from "$lib/models.js"
+    import Footer from "$lib/components/Footer.svelte"
 </script>
 
 <main class="container mx-auto flex max-w-4xl flex-col items-center px-4 py-8">
@@ -12,3 +13,7 @@
         initialConfig={{}}
     />
 </main>
+
+<footer>
+    <Footer />
+</footer>

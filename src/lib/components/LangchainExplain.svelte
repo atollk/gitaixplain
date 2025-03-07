@@ -22,7 +22,7 @@
     <Loading
         message="Summarizing the repository. This might take a while, depending on the size."
     />
-    <p>{countTokens(props.repoSummary.toXmlString())}</p>
+    <p>{countTokens(props.repoSummary.toXmlString())} tokens are being processed</p>
 {:then modelResponse}
     <div class="flex max-w-[inherit] flex-col items-center justify-center">
         <div class="flex flex-col gap-3">
@@ -97,6 +97,8 @@
     </div>
 
     <div class="divider my-8"></div>
+
+    <h4>Chat about the repository</h4>
 
     <LangchainChat model={props.interface} />
 {/await}

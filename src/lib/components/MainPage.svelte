@@ -9,6 +9,7 @@
     import ConfigForm from "$lib/components/ConfigForm.svelte"
     import { GeminiInterface, GroqInterface, OllamaInterface } from "$lib/backend/langchain_implementations"
     import { goto } from "$app/navigation"
+    import Footer from "$lib/components/Footer.svelte"
 
     const urlParams = $derived(page.url.searchParams)
     const apiName = $derived(urlParams.get("api") as ApiName ?? apiList[0])
@@ -65,3 +66,7 @@
         <LangchainExplain repoLink={gitUrl} interface={model} {repoSummary} />
     {/await}
 </main>
+
+<footer>
+    <Footer />
+</footer>

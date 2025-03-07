@@ -1,6 +1,6 @@
 # API & Model Configuration
 
-First, you want to need the model family or API provider to use with Gitaixplain.
+First, you need to choose the model family or API provider to use with Gitaixplain.
 There are two categories: AI as a service, such as Gemini or Groq; and a local AI, such as Ollama.
 After picking one of these providers, you can configure it in more detail.
 

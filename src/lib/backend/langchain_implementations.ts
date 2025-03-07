@@ -104,10 +104,7 @@ export class OllamaInterface extends LangchainBaseInterface<OllamaInterfaceConfi
             const model = new ChatOllama({
                 model: "gemma2:2b",
                 checkOrPullModel: true,
-                headers: new Headers([
-                    ["x-stainless-retry-count", ""],
-                    ["x-stainless-timeout", ""],
-                ]),
+                headers: new Headers([["x-stainless-retry-count", ""]]),
             })
             // Ollama silently cuts off content beyond the context window size, so we add a buffer to have more explicit control.
             model.numCtx = Math.min(this.getContextWindowSize() * 2, baseModel.maxContext)

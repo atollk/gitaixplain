@@ -1,40 +1,24 @@
-# sv
+# Gitaixplain
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+https://atollk.github.io/gitaixplain/
 
-## Creating a project
+Understand git repositories faster than ever.
 
-If you're seeing this, you've probably already done this step. Congrats!
+## Purpose
 
-```bash
-# create a new project in the current directory
-npx sv create
+Gitaixplain aims to use the power of large language models (LLMs) to help you understand Git repositories.
 
-# create a new project in my-app
-npx sv create my-app
-```
+This can be useful when:
 
-## Developing
+- trying to work with a repository with bad documentation.
+- wanting to contribute to a repository for the first time.
+- trying to understand the inner workings of a repository to learn from it.
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a
-development server:
+The purpose of Gitaixplain is *not* to beat something like Claude projects in the quality of it's analysis.
+However, Gitaixplain has the advantages of:
 
-```bash
-npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
-
-## Building
-
-To create a production version of your app:
-
-```bash
-npm run build
-```
-
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target
-> environment.
+- being a pure frontend app, meaning you can use it from any device.
+- not requiring you to clone the repository to your hard drive and uploading it somewhere again, because everything
+  happens in the browser in memory.
+- allowing you to use any popular AI provider or a local model on your device.
+- RAG system specialized on software development tasks. (actually, this is WIP)

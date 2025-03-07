@@ -101,15 +101,20 @@ export class OllamaInterface extends LangchainBaseInterface<OllamaInterfaceConfi
         super(config, () => {
             const baseModel = OllamaInterface.models["gemma2:2b"]
 
+            const corsHeaders = new Headers([["x-stainless-retry-count", ""]])
+
             const model = new ChatOllama({
                 model: "gemma2:2b",
                 checkOrPullModel: true,
-                headers: new Headers([["x-stainless-retry-count", ""]]),
+                headers: corsHeaders,
             })
             // Ollama silently cuts off content beyond the context window size, so we add a buffer to have more explicit control.
             model.numCtx = Math.min(this.getContextWindowSize() * 2, baseModel.maxContext)
 
-            const embeddings = new OllamaEmbeddings({ model: "mxbai-embed-large" })
+            const embeddings = new OllamaEmbeddings({
+                model: "mxbai-embed-large",
+                headers: corsHeaders,
+            })
             return [model, embeddings]
         })
     }

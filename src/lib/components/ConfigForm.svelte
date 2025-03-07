@@ -4,7 +4,9 @@
     import { GeminiInterface, GroqInterface } from "$lib/backend/langchain_implementations"
     import { base } from "$app/paths"
 
-    let { ...props }: {
+    let {
+        ...props
+    }: {
         initialUrl: string
         initialApiName: ApiName
         initialConfig: { [fieldName: string]: any }
@@ -53,49 +55,64 @@
             {/each}
         </select>
 
-        <div>
-            {#if apiName === "Gemini"}
-                <div class="flex flex-col gap-2">
-                    <div class="flex items-center">
-                        <label class="input input-bordered flex items-center gap-2 select-none cursor-default">
-                            API Key:
-                            <input type=text class="grow" bind:value={ config.apiKey } />
-                        </label>
-                        <div class="badge badge-info badge-xs">?</div>
-                    </div>
-
-                    <select bind:value={config.model} class="select select-bordered w-full max-w-xs">
-                        <option disabled selected>Model</option>
-                        {#each GeminiInterface.models as model}
-                            <option value={model.name}>{model.name}</option>
-                        {/each}
-                    </select>
-                </div>
-            {:else if apiName === "Groq"}
-                <div class="flex flex-col gap-2">
-                    <label class="input input-bordered flex items-center gap-2">
-                        API Key:
-                        <input type=text class="grow" bind:value={ config.apiKey } />
-                    </label>
-
-                    <select bind:value={config.model} class="select select-bordered w-full max-w-xs">
-                        <option disabled selected>Model</option>
-                        {#each GroqInterface.models as model}
-                            <option value={model.name}>{model.name}</option>
-                        {/each}
-                    </select>
-                </div>
-            {:else if apiName === "Ollama"}
-                <div>
-                    <label class="input input-bordered flex items-center gap-2">
-                        Context Size:
-                        <input type=number class="grow" bind:value={ config.contextWindowSize } />
-                    </label>
-                </div>
-            {:else}
-                Error. Unknown API {apiName}
-            {/if}
+        <div class="h-10 flex items-center">
+            <a
+                class="badge badge-info badge-sm"
+                href="https://www.github.com/atollk/gitaixplain/tree/main/docs/ModelConfig.md"
+                rel="external"
+                target="_blank"
+            >
+                ?
+            </a>
         </div>
+
+        {#if apiName === "Gemini"}
+            <div class="flex flex-col gap-2">
+                <div class="flex items-center">
+                    <label
+                        class="input input-bordered flex cursor-default items-center gap-2 select-none"
+                    >
+                        API Key:
+                        <input type="text" class="grow" bind:value={config.apiKey} />
+                    </label>
+                </div>
+
+                <select bind:value={config.model} class="select select-bordered w-full max-w-xs">
+                    <option disabled selected>Model</option>
+                    {#each GeminiInterface.models as model}
+                        <option value={model.name}>{model.name}</option>
+                    {/each}
+                </select>
+            </div>
+        {:else if apiName === "Groq"}
+            <div class="flex flex-col gap-2">
+                <label class="input input-bordered flex items-center gap-2">
+                    API Key:
+                    <input type="text" class="grow" bind:value={config.apiKey} />
+                </label>
+
+                <select bind:value={config.model} class="select select-bordered w-full max-w-xs">
+                    <option disabled selected>Model</option>
+                    {#each GroqInterface.models as model}
+                        <option value={model.name}>{model.name}</option>
+                    {/each}
+                </select>
+            </div>
+        {:else if apiName === "Ollama"}
+            <div class="flex flex-col items-center gap-2">
+                <label class="input input-bordered flex items-center gap-2">
+                    Context Size:
+                    <input type="number" class="grow" bind:value={config.contextWindowSize} />
+                </label>
+
+                <div class="tooltip">
+                    <div class="tooltip-content">hello</div>
+                    <div class="badge badge-info">CORS setup</div>
+                </div>
+            </div>
+        {:else}
+            Error. Unknown API {apiName}
+        {/if}
     </div>
 
     <button type="submit" class="btn btn-primary w-full">Submit</button>

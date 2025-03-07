@@ -11,7 +11,7 @@
             </a>
             <sup class="text-sm align-top">beta</sup>
         </div>
-        <a href="https://github.com/atollk/gitaixplain/">
+        <a href="https://github.com/atollk/gitaixplain/" target="_blank">
             <img src="github-mark.svg" alt="GitHub logo" class="w-8 hover:brightness-200" />
         </a>
     </div>

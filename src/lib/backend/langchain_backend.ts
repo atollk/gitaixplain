@@ -133,7 +133,7 @@ export abstract class LangchainBaseInterface<
                 ? new SystemMessage(systemMessage)
                 : new HumanMessage(systemMessage),
         ]
-        for (let { text, byUser } of chat) {
+        for (const { text, byUser } of chat) {
             messages.push(byUser ? new HumanMessage(text) : new AIMessage(text))
         }
 
@@ -157,7 +157,7 @@ export abstract class LangchainBaseInterface<
                 await new Promise((r) => setTimeout(r, 10))
                 // Group as many children together as possible while staying within token limit.
                 const childrenGroups: { path: string; xml: string; tokens: number }[][] = []
-                for (let [child, _] of Object.values(children)) {
+                for (const [child,_] of Object.values(children)) {
                     let foundMatch = false
                     for (let i = 0; i < childrenGroups.length; i++) {
                         const groupTokenSum = childrenGroups[i].reduce(
@@ -175,7 +175,7 @@ export abstract class LangchainBaseInterface<
                 // Merge the XML of all groups.
                 const mergedXmls = childrenGroups.map((group) => {
                     let groupXml = ""
-                    for (let { xml } of group) groupXml += xml
+                    for (const { xml } of group) groupXml += xml
                     return groupXml
                 })
 
@@ -193,13 +193,13 @@ export abstract class LangchainBaseInterface<
                 }
 
                 // Summarize all the children groups individually.
-                let summarizedGroups: string[] = []
-                for (let xml of mergedXmls) {
+                const summarizedGroups: string[] = []
+                for (const xml of mergedXmls) {
                     summarizedGroups.push(await this.summarizePart(directoryInfo.path, xml))
                 }
 
                 let completeXml = ""
-                for (let xml of summarizedGroups) completeXml += xml
+                for (const xml of summarizedGroups) completeXml += xml
                 return [
                     {
                         path: directoryInfo.path,

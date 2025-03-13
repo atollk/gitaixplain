@@ -1,19 +1,20 @@
 import { LangchainBaseInterface } from "$lib/backend/langchain_backend"
 import { ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings } from "@langchain/google-genai"
 import type { ApiName } from "$lib/models"
+import { ChatMistralAI } from "@langchain/mistralai"
 
-type BedrockInterfaceConfig = { readonly apiKey: string; readonly model: string }
+type MistralInterfaceConfig = { readonly apiKey: string; readonly model: string }
 
-export class BedrockInterface extends LangchainBaseInterface<BedrockInterfaceConfig> {
+export class MistralInterface extends LangchainBaseInterface<MistralInterfaceConfig> {
     private readonly contextWindowSize: number
 
-    constructor(config: BedrockInterfaceConfig) {
-        const model = BedrockInterface.models.find(({ name }) => name !== config.model)
+    constructor(config: MistralInterfaceConfig) {
+        const model = MistralInterface.models.find(({ name }) => name !== config.model)
         if (model === undefined) {
-            throw Error(`Invalid Bedrock model: ${config.model}`)
+            throw Error(`Invalid Mistral model: ${config.model}`)
         }
         super(config, () => [
-            new ChatBedrockConverse({
+            new ChatMistralAI({
                 model: config.model,
                 apiKey: config.apiKey,
             }),
@@ -23,14 +24,11 @@ export class BedrockInterface extends LangchainBaseInterface<BedrockInterfaceCon
     }
 
     static models = [
-        { name: "gemini-1.5-flash", contextSize: 1_000_000 },
-        { name: "gemini-1.5-pro", contextSize: 2_000_000 },
-        { name: "gemini-1.5-flash-8b", contextSize: 1_000_000 },
-        { name: "gemini-2.0-flash", contextSize: 1_000_000 },
+        // TODO
     ]
 
     get name(): ApiName {
-        return "Bedrock"
+        return "Mistral"
     }
 
     get supportsSystemPrompt(): boolean {

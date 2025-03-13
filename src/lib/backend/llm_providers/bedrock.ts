@@ -1,8 +1,14 @@
 import { LangchainBaseInterface } from "$lib/backend/langchain_backend"
 import { ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings } from "@langchain/google-genai"
 import type { ApiName } from "$lib/models"
+import { ChatBedrockConverse } from "@langchain/aws"
 
-type BedrockInterfaceConfig = { readonly apiKey: string; readonly model: string }
+type BedrockInterfaceConfig = {
+    readonly awsRegion: string
+    readonly accessKeyId: string
+    readonly secretAccessKey: string
+    readonly model: string
+}
 
 export class BedrockInterface extends LangchainBaseInterface<BedrockInterfaceConfig> {
     private readonly contextWindowSize: number
@@ -15,7 +21,11 @@ export class BedrockInterface extends LangchainBaseInterface<BedrockInterfaceCon
         super(config, () => [
             new ChatBedrockConverse({
                 model: config.model,
-                apiKey: config.apiKey,
+                region: config.awsRegion,
+                credentials: {
+                    accessKeyId: config.accessKeyId,
+                    secretAccessKey: config.secretAccessKey,
+                },
             }),
             undefined /* TODO */,
         ])

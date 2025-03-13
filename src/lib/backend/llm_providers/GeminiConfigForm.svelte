@@ -2,7 +2,7 @@
     import { GeminiInterface } from "$lib/backend/llm_providers/gemini"
     import ModelSelect from "$lib/backend/llm_providers/util/ModelSelect.svelte"
 
-    const { config }: { config: { [fieldName: string]: any } } = $props()
+    let { config = $bindable() }: { config: { [fieldName: string]: any } } = $props()
 </script>
 
 <div class="flex flex-col gap-2">

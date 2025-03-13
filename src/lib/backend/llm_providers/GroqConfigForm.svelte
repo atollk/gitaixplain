@@ -2,7 +2,7 @@
     import { GroqInterface } from "$lib/backend/llm_providers/groq"
     import ModelSelect from "$lib/backend/llm_providers/util/ModelSelect.svelte"
 
-    const { config }: { config: { [fieldName: string]: any } } = $props()
+    const { config=$bindable() }: { config: { [fieldName: string]: any } } = $props()
 </script>
 
 <div class="flex flex-col gap-2">

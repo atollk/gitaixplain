@@ -1,5 +1,5 @@
 <script lang="ts">
-    const { config }: { config: { [fieldName: string]: any } } = $props()
+    const { config=$bindable() }: { config: { [fieldName: string]: any } } = $props()
 </script>
 
 <div class="flex flex-col items-center gap-2">

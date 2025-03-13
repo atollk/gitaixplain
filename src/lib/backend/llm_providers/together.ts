@@ -1,19 +1,20 @@
 import { LangchainBaseInterface } from "$lib/backend/langchain_backend"
 import { ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings } from "@langchain/google-genai"
 import type { ApiName } from "$lib/models"
+import { ChatTogetherAI } from "@langchain/community/dist/chat_models/togetherai"
 
-type BedrockInterfaceConfig = { readonly apiKey: string; readonly model: string }
+type TogetherInterfaceConfig = { readonly apiKey: string; readonly model: string }
 
-export class BedrockInterface extends LangchainBaseInterface<BedrockInterfaceConfig> {
+export class TogetherInterface extends LangchainBaseInterface<TogetherInterfaceConfig> {
     private readonly contextWindowSize: number
 
-    constructor(config: BedrockInterfaceConfig) {
-        const model = BedrockInterface.models.find(({ name }) => name !== config.model)
+    constructor(config: TogetherInterfaceConfig) {
+        const model = TogetherInterface.models.find(({ name }) => name !== config.model)
         if (model === undefined) {
-            throw Error(`Invalid Bedrock model: ${config.model}`)
+            throw Error(`Invalid Together model: ${config.model}`)
         }
         super(config, () => [
-            new ChatBedrockConverse({
+            new ChatTogetherAI({
                 model: config.model,
                 apiKey: config.apiKey,
             }),
@@ -23,14 +24,11 @@ export class BedrockInterface extends LangchainBaseInterface<BedrockInterfaceCon
     }
 
     static models = [
-        { name: "gemini-1.5-flash", contextSize: 1_000_000 },
-        { name: "gemini-1.5-pro", contextSize: 2_000_000 },
-        { name: "gemini-1.5-flash-8b", contextSize: 1_000_000 },
-        { name: "gemini-2.0-flash", contextSize: 1_000_000 },
+        // TODO
     ]
 
     get name(): ApiName {
-        return "Bedrock"
+        return "Together"
     }
 
     get supportsSystemPrompt(): boolean {

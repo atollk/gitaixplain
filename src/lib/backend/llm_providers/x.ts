@@ -1,19 +1,20 @@
 import { LangchainBaseInterface } from "$lib/backend/langchain_backend"
 import { ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings } from "@langchain/google-genai"
 import type { ApiName } from "$lib/models"
+import { ChatXAI } from "@langchain/xai"
 
-type BedrockInterfaceConfig = { readonly apiKey: string; readonly model: string }
+type XInterfaceConfig = { readonly apiKey: string; readonly model: string }
 
-export class BedrockInterface extends LangchainBaseInterface<BedrockInterfaceConfig> {
+export class XInterface extends LangchainBaseInterface<XInterfaceConfig> {
     private readonly contextWindowSize: number
 
-    constructor(config: BedrockInterfaceConfig) {
-        const model = BedrockInterface.models.find(({ name }) => name !== config.model)
+    constructor(config: XInterfaceConfig) {
+        const model = XInterface.models.find(({ name }) => name !== config.model)
         if (model === undefined) {
-            throw Error(`Invalid Bedrock model: ${config.model}`)
+            throw Error(`Invalid X model: ${config.model}`)
         }
         super(config, () => [
-            new ChatBedrockConverse({
+            new ChatXAI({
                 model: config.model,
                 apiKey: config.apiKey,
             }),
@@ -30,7 +31,7 @@ export class BedrockInterface extends LangchainBaseInterface<BedrockInterfaceCon
     ]
 
     get name(): ApiName {
-        return "Bedrock"
+        return "xAI"
     }
 
     get supportsSystemPrompt(): boolean {

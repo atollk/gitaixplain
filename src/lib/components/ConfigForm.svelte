@@ -2,8 +2,6 @@
     import { goto } from "$app/navigation"
     import { apiList, type ApiName } from "$lib/models"
     import { base } from "$app/paths"
-    import { GeminiInterface } from "$lib/backend/llm_providers/gemini"
-    import { GroqInterface } from "$lib/backend/llm_providers/groq"
     import GeminiConfigForm from "$lib/backend/llm_providers/GeminiConfigForm.svelte"
     import GroqConfigForm from "$lib/backend/llm_providers/GroqConfigForm.svelte"
     import OllamaConfigForm from "$lib/backend/llm_providers/OllamaConfigForm.svelte"
@@ -71,11 +69,11 @@
         </div>
 
         {#if apiName === "Gemini"}
-            <GeminiConfigForm config={config} />
+            <GeminiConfigForm bind:config={config} />
         {:else if apiName === "Groq"}
-            <GroqConfigForm config={config} />
+            <GroqConfigForm bind:config={config} />
         {:else if apiName === "Ollama"}
-            <OllamaConfigForm config={config} />
+            <OllamaConfigForm bind:config={config} />
         {:else}
             Error. Unknown API {apiName}
         {/if}

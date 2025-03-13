@@ -4,6 +4,7 @@ import { LangchainBaseInterface } from "$lib/backend/langchain_backend"
 import { ChatOllama, OllamaEmbeddings } from "@langchain/ollama"
 import type { ApiName } from "$lib/models"
 import { HuggingFaceTransformersEmbeddings } from "@langchain/community/embeddings/huggingface_transformers"
+import { ChatAnthropic } from "@langchain/anthropic"
 
 type GeminiInterfaceConfig = { readonly apiKey: string; readonly model: string }
 
@@ -91,6 +92,48 @@ export class GroqInterface extends LangchainBaseInterface<GroqInterfaceConfig> {
         return this.contextWindowSize
     }
 }
+
+export type AnthropicInterfaceConfig = { readonly apiKey: string; readonly model: string }
+
+export class AnthropicInterface extends LangchainBaseInterface<AnthropicInterfaceConfig> {
+    private readonly contextWindowSize: number
+
+    constructor(config: AnthropicInterfaceConfig) {
+        const model = AnthropicInterface.models.find(({ name }) => name === config.model)
+        if (model === undefined) {
+            throw Error(`Invalid Anthropic model: ${config.model}`)
+        }
+        super(config, () => [
+            new ChatAnthropic({
+                model: config.model,
+                apiKey: config.apiKey,
+            }),
+            // TODO: do the embeddings setup async
+            new HuggingFaceTransformersEmbeddings({ model: "Xenova/all-MiniLM-L6-v2" }),
+        ])
+        this.contextWindowSize = model.contextSize
+    }
+
+    static models = [
+        {name: "claude-3-7-sonnet-20250219", contextSize: 200_000 },
+        {name: "claude-3-5-haiku-20241022", contextSize: 200_000 },
+        {name: "claude-3-opus-20240229", contextSize: 200_000 },
+        {name: "claude-3-haiku-20240307", contextSize: 200_000 },
+    ]
+
+    get name(): ApiName {
+        return "Anthropic"
+    }
+
+    get supportsSystemPrompt(): boolean {
+        return true
+    }
+
+    getContextWindowSize(): number {
+        return this.contextWindowSize
+    }
+}
+
 
 export type OllamaInterfaceConfig = { contextWindowSize: number }
 

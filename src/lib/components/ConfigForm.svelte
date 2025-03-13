@@ -1,8 +1,12 @@
 <script lang="ts">
     import { goto } from "$app/navigation"
     import { apiList, type ApiName } from "$lib/models"
-    import { GeminiInterface, GroqInterface } from "$lib/backend/langchain_implementations"
     import { base } from "$app/paths"
+    import { GeminiInterface } from "$lib/backend/llm_providers/gemini"
+    import { GroqInterface } from "$lib/backend/llm_providers/groq"
+    import GeminiConfigForm from "$lib/backend/llm_providers/GeminiConfigForm.svelte"
+    import GroqConfigForm from "$lib/backend/llm_providers/GroqConfigForm.svelte"
+    import OllamaConfigForm from "$lib/backend/llm_providers/OllamaConfigForm.svelte"
 
     let {
         ...props
@@ -67,49 +71,11 @@
         </div>
 
         {#if apiName === "Gemini"}
-            <div class="flex flex-col gap-2">
-                <div class="flex items-center">
-                    <label
-                        class="input input-bordered flex cursor-default items-center gap-2 select-none"
-                    >
-                        API Key:
-                        <input type="text" class="grow" bind:value={config.apiKey} />
-                    </label>
-                </div>
-
-                <select bind:value={config.model} class="select select-bordered w-full max-w-xs">
-                    <option disabled selected>Model</option>
-                    {#each GeminiInterface.models as model}
-                        <option value={model.name}>{model.name}</option>
-                    {/each}
-                </select>
-            </div>
+            <GeminiConfigForm config={config} />
         {:else if apiName === "Groq"}
-            <div class="flex flex-col gap-2">
-                <label class="input input-bordered flex items-center gap-2">
-                    API Key:
-                    <input type="text" class="grow" bind:value={config.apiKey} />
-                </label>
-
-                <select bind:value={config.model} class="select select-bordered w-full max-w-xs">
-                    <option disabled selected>Model</option>
-                    {#each GroqInterface.models as model}
-                        <option value={model.name}>{model.name}</option>
-                    {/each}
-                </select>
-            </div>
+            <GroqConfigForm config={config} />
         {:else if apiName === "Ollama"}
-            <div class="flex flex-col items-center gap-2">
-                <label class="input input-bordered flex items-center gap-2">
-                    Context Size:
-                    <input type="number" class="grow" bind:value={config.contextWindowSize} />
-                </label>
-
-                <div class="tooltip">
-                    <div class="tooltip-content">hello</div>
-                    <div class="badge badge-info">CORS setup</div>
-                </div>
-            </div>
+            <OllamaConfigForm config={config} />
         {:else}
             Error. Unknown API {apiName}
         {/if}

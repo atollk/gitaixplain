@@ -7,9 +7,11 @@
     import { fetchRepoSummary } from "$lib/backend/repo_summary_backend"
     import { AiInterface } from "$lib/backend/ai_backend"
     import ConfigForm from "$lib/components/ConfigForm.svelte"
-    import { GeminiInterface, GroqInterface, OllamaInterface } from "$lib/backend/langchain_implementations"
     import { goto } from "$app/navigation"
     import Footer from "$lib/components/Footer.svelte"
+    import { OllamaInterface } from "$lib/backend/llm_providers/ollama"
+    import { GroqInterface } from "$lib/backend/llm_providers/groq"
+    import { GeminiInterface } from "$lib/backend/llm_providers/gemini"
 
     const urlParams = $derived(page.url.searchParams)
     const apiName = $derived(urlParams.get("api") as ApiName ?? apiList[0])

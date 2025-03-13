@@ -2,7 +2,7 @@ import { ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings } from "@langchain
 import { ChatGroq } from "@langchain/groq"
 import { LangchainBaseInterface } from "$lib/backend/langchain_backend"
 import { ChatOllama, OllamaEmbeddings } from "@langchain/ollama"
-import type { ApiName } from "$lib/models"
+import type { ChatProviderName } from "$lib/models"
 import { HuggingFaceTransformersEmbeddings } from "@langchain/community/embeddings/huggingface_transformers"
 import { ChatAnthropic } from "@langchain/anthropic"
 
@@ -36,7 +36,7 @@ export class GeminiInterface extends LangchainBaseInterface<GeminiInterfaceConfi
         { name: "gemini-2.0-flash", contextSize: 1_000_000 },
     ]
 
-    get name(): ApiName {
+    get name(): ChatProviderName {
         return "Gemini"
     }
 
@@ -80,7 +80,7 @@ export class GroqInterface extends LangchainBaseInterface<GroqInterfaceConfig> {
         { name: "mixtral-8x7b-32768", contextSize: 32_000 },
     ]
 
-    get name(): ApiName {
+    get name(): ChatProviderName {
         return "Groq"
     }
 
@@ -121,7 +121,7 @@ export class AnthropicInterface extends LangchainBaseInterface<AnthropicInterfac
         {name: "claude-3-haiku-20240307", contextSize: 200_000 },
     ]
 
-    get name(): ApiName {
+    get name(): ChatProviderName {
         return "Anthropic"
     }
 
@@ -162,7 +162,7 @@ export class OllamaInterface extends LangchainBaseInterface<OllamaInterfaceConfi
         })
     }
 
-    get name(): ApiName {
+    get name(): ChatProviderName {
         return "Ollama"
     }
 

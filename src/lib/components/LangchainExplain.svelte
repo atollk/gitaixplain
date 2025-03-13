@@ -2,19 +2,20 @@
     import { AiInterface, type AiRepoSummary, type Graph } from "$lib/backend/ai_backend"
     import { countTokens } from "$lib/backend/util"
     import Loading from "$lib/components/util/Loading.svelte"
-    import type { RepositoryDump } from "$lib/backend/repo_summary_backend"
+    import type { RepositoryDump } from "$lib/backend/repository_dump"
     import MermaidRender from "$lib/components/util/MermaidRender.svelte"
     import { flowGraphToMermaid } from "$lib/backend/mermaid_backend"
     import LangchainChat from "$lib/components/LangchainChat.svelte"
+    import { analyzeRepo } from "$lib/backend/repository_summary"
 
     let props: {
         repoLink: string
-        interface: AiInterface<any>
+        interface: AiInterface
         repoSummary: RepositoryDump
     } = $props()
 
     const modelResponse = $derived<Promise<AiRepoSummary>>(
-        props.interface.analyzeRepo(props.repoSummary),
+        analyzeRepo(props.interface, props.repoSummary),
     )
     const renderGraph = (graph?: Graph) => (graph === undefined ? "" : flowGraphToMermaid(graph))
     const linkToFile = (filePath: string) => `${props.repoLink}/tree/HEAD/${filePath}`
@@ -68,7 +69,7 @@
                     {#each modelResponse?.keyFiles ?? [] as keyFile}
                         <li>
                             <a class="font-bold" href={linkToFile(keyFile?.path ?? "")}
-                            >{keyFile.path}</a
+                                >{keyFile.path}</a
                             >
                             <ul>
                                 <li>Purpose: {keyFile.purpose}</li>

@@ -1,7 +1,7 @@
 <script lang="ts">
     import Header from "$lib/components/Header.svelte"
     import ConfigForm from "$lib/components/ConfigForm.svelte"
-    import { apiList } from "$lib/models.js"
+    import { chatProviderList } from "$lib/models.js"
     import Footer from "$lib/components/Footer.svelte"
 </script>
 
@@ -9,7 +9,7 @@
     <Header />
     <ConfigForm
         initialUrl=""
-        initialApiName={apiList[0]}
+        initialApiName={chatProviderList[0]}
         initialConfig={{}}
     />
 </main>

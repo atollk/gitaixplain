@@ -1,6 +1,6 @@
 <script lang="ts">
     import { goto } from "$app/navigation"
-    import { apiList, type ApiName } from "$lib/models"
+    import { chatProviderList, type ChatProviderName } from "$lib/models"
     import { GeminiInterface, GroqInterface } from "$lib/backend/langchain_implementations"
     import { base } from "$app/paths"
 
@@ -8,7 +8,7 @@
         ...props
     }: {
         initialUrl: string
-        initialApiName: ApiName
+        initialApiName: ChatProviderName
         initialConfig: { [fieldName: string]: any }
     } = $props()
 
@@ -50,7 +50,7 @@
 
     <div class="flex gap-4">
         <select bind:value={apiName} class="select select-bordered w-40">
-            {#each apiList as model}
+            {#each chatProviderList as model}
                 <option value={model}>{model}</option>
             {/each}
         </select>

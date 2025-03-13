@@ -1,10 +1,10 @@
 <script lang="ts">
     import { page } from "$app/state"
     import Header from "$lib/components/Header.svelte"
-    import { apiList, type ApiName } from "$lib/models"
+    import { chatProviderList, type ChatProviderName } from "$lib/models"
     import LangchainExplain from "$lib/components/LangchainExplain.svelte"
     import Loading from "$lib/components/util/Loading.svelte"
-    import { fetchRepoSummary } from "$lib/backend/repo_summary_backend"
+    import { fetchRepoSummary } from "$lib/backend/repository_dump"
     import { AiInterface } from "$lib/backend/ai_backend"
     import ConfigForm from "$lib/components/ConfigForm.svelte"
     import { GeminiInterface, GroqInterface, OllamaInterface } from "$lib/backend/langchain_implementations"
@@ -12,7 +12,7 @@
     import Footer from "$lib/components/Footer.svelte"
 
     const urlParams = $derived(page.url.searchParams)
-    const apiName = $derived(urlParams.get("api") as ApiName ?? apiList[0])
+    const apiName = $derived(urlParams.get("api") as ChatProviderName ?? chatProviderList[0])
     const config = $derived(JSON.parse(urlParams.get("config") ?? "{}"))
     const gitUrl = $derived.by(() => {
         const url = urlParams.get("git")
@@ -24,7 +24,7 @@
     })
 
     function aiInterfaceFromModelName(
-        apiName: ApiName,
+        apiName: ChatProviderName,
         config: { [property: string]: any },
     ): AiInterface<any> {
         switch (apiName) {

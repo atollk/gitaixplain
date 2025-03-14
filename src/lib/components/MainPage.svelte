@@ -11,7 +11,8 @@
     import Footer from "$lib/components/Footer.svelte"
     import {
         GeminiChatInterface,
-        GroqChatInterface, OllamaChatInterface,
+        GroqChatInterface,
+        OllamaChatInterface,
     } from "$lib/backend/langchain_chat_implementations"
     import {
         GeminiRAGInterface,
@@ -33,31 +34,20 @@
 
     function aiInterfaceFromModelName(
         apiName: ChatProviderName,
-        config: { [property: string]: unknown },
+        config: Record<string, unknown>,
     ): AiInterface {
         switch (apiName) {
             case "Gemini":
                 return new AiInterface(
-                    new GeminiChatInterface({
-                        apiKey: config.apiKey ?? "",
-                        model: config.model ?? GeminiChatInterface.models[0].name,
-                    }),
-                    new GeminiRAGInterface({
-                        apiKey: config.apiKey ?? "",
-                    }),
+                    new GeminiChatInterface(config),
+                    new GeminiRAGInterface(config),
                 )
             case "Groq":
-                return new AiInterface(
-                    new GroqChatInterface({
-                        apiKey: config.apiKey ?? "",
-                        model: config.model ?? GroqChatInterface.models[0].name,
-                    }),
-                    new LocalRAGInterface({}),
-                )
+                return new AiInterface(new GroqChatInterface(config), new LocalRAGInterface({}))
             case "Ollama":
                 return new AiInterface(
-                    new OllamaChatInterface({ contextWindowSize: config.contextWindowSize ?? 4000 }),
-                    new OllamaRAGInterface(),
+                    new OllamaChatInterface(config),
+                    new OllamaRAGInterface(config),
                 )
             default:
                 throw Error(`API ${apiName} is invalid.`)

@@ -4,13 +4,18 @@ import { LangchainChatInterface } from "$lib/backend/langchain_backend"
 import { ChatOllama } from "@langchain/ollama"
 import type { ChatProviderName } from "$lib/models"
 import { ChatAnthropic } from "@langchain/anthropic"
+import { convertToConfig } from "$lib/backend/util"
 
 type GeminiChatInterfaceConfig = { readonly apiKey: string; readonly model: string }
 
 export class GeminiChatInterface extends LangchainChatInterface<GeminiChatInterfaceConfig> {
     private readonly contextWindowSize: number
 
-    constructor(config: GeminiChatInterfaceConfig) {
+    constructor(_config: Record<string, unknown>) {
+        const config = convertToConfig<GeminiChatInterfaceConfig>(_config, {
+            apiKey: "",
+            model: GeminiChatInterface.models[0].name,
+        })
         const model = GeminiChatInterface.models.find(({ name }) => name !== config.model)
         if (model === undefined) {
             throw Error(`Invalid Gemini model: ${config.model}`)
@@ -51,7 +56,11 @@ export type GroqChatInterfaceConfig = { readonly apiKey: string; readonly model:
 export class GroqChatInterface extends LangchainChatInterface<GroqChatInterfaceConfig> {
     private readonly contextWindowSize: number
 
-    constructor(config: GroqChatInterfaceConfig) {
+    constructor(_config: Record<string, unknown>) {
+        const config = convertToConfig<GroqChatInterfaceConfig>(_config, {
+            apiKey: "",
+            model: GroqChatInterface.models[0].name,
+        })
         const model = GroqChatInterface.models.find(({ name }) => name === config.model)
         if (model === undefined) {
             throw Error(`Invalid Groq model: ${config.model}`)
@@ -95,7 +104,11 @@ export type AnthropicChatInterfaceConfig = { readonly apiKey: string; readonly m
 export class AnthropicChatInterface extends LangchainChatInterface<AnthropicChatInterfaceConfig> {
     private readonly contextWindowSize: number
 
-    constructor(config: AnthropicChatInterfaceConfig) {
+    constructor(_config: Record<string, unknown>) {
+        const config = convertToConfig<AnthropicChatInterfaceConfig>(_config, {
+            apiKey: "",
+            model: AnthropicChatInterface.models[0].name,
+        })
         const model = AnthropicChatInterface.models.find(({ name }) => name === config.model)
         if (model === undefined) {
             throw Error(`Invalid Anthropic model: ${config.model}`)
@@ -136,7 +149,10 @@ export type OllamaChatInterfaceConfig = { contextWindowSize: number }
 export class OllamaChatInterface extends LangchainChatInterface<OllamaChatInterfaceConfig> {
     static models = { ["gemma2:2b"]: { maxContext: 8192 } }
 
-    constructor(config: OllamaChatInterfaceConfig) {
+    constructor(_config: Record<string, unknown>) {
+        const config = convertToConfig<OllamaChatInterfaceConfig>(_config, {
+            contextWindowSize: 1000,
+        })
         super(config, () => {
             const baseModel = OllamaChatInterface.models["gemma2:2b"]
 

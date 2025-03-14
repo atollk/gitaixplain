@@ -26,9 +26,7 @@ export interface AiRepoSummary {
     dependencies?: string[]
 }
 
-export abstract class AiChatInterface<Config extends { [property: string]: unknown } = never> {
-    protected constructor(readonly config: Config) {}
-
+export abstract class AiChatInterface {
     abstract get name(): ChatProviderName
 
     abstract getContextWindowSize(): number
@@ -39,9 +37,7 @@ export abstract class AiChatInterface<Config extends { [property: string]: unkno
     ): Promise<string>
 }
 
-export abstract class AiRAGInterface<Config extends { [property: string]: unknown } = never> {
-    protected constructor(readonly config: Config) {}
-
+export abstract class AiRAGInterface {
     abstract get name(): EmbeddingProviderName
 
     abstract getContext(query: string): Promise<string>

@@ -1,24 +1,21 @@
 import { AIMessage, HumanMessage, SystemMessage } from "@langchain/core/messages"
 import { BaseChatModel } from "@langchain/core/language_models/chat_models"
-import {
-    AiChatInterface,
-    AiRAGInterface,
-} from "$lib/backend/ai_backend"
+import { AiChatInterface, AiRAGInterface } from "$lib/backend/ai_backend"
 import { Embeddings } from "@langchain/core/embeddings"
 import { VectorStore } from "@langchain/core/vectorstores"
 import { MemoryVectorStore } from "langchain/vectorstores/memory"
 import type { DocumentInterface } from "@langchain/core/documents"
 
 export abstract class LangchainChatInterface<
-    Config extends { [property: string]: unknown },
-> extends AiChatInterface<Config> {
+    Config extends Record<string, unknown>,
+> extends AiChatInterface {
     private model?: BaseChatModel
 
     protected constructor(
-        config: Config,
+        protected readonly config: Config,
         protected readonly modelGen: () => BaseChatModel,
     ) {
-        super(config)
+        super()
     }
 
     protected abstract get supportsSystemPrompt(): boolean
@@ -47,17 +44,17 @@ export abstract class LangchainChatInterface<
 }
 
 export abstract class LangchainRAGInterface<
-    Config extends { [property: string]: unknown },
-> extends AiRAGInterface<Config> {
+    Config extends Record<string, unknown>,
+> extends AiRAGInterface {
     private embeddings?: Embeddings
     private vectorStore?: VectorStore
     private vectorStoreLength: number = 0
 
     protected constructor(
-        config: Config,
+        protected readonly config: Config,
         protected readonly modelGen: () => Embeddings,
     ) {
-        super(config)
+        super()
     }
 
     async getContext(query: string): Promise<string> {

@@ -3,11 +3,15 @@ import { LangchainRAGInterface } from "$lib/backend/langchain_backend"
 import { OllamaEmbeddings } from "@langchain/ollama"
 import type { EmbeddingProviderName } from "$lib/models"
 import { HuggingFaceTransformersEmbeddings } from "@langchain/community/embeddings/huggingface_transformers"
+import { convertToConfig } from "$lib/backend/util"
 
-type GeminiRAGInterfaceConfig = { readonly apiKey: string; readonly model: string }
+type GeminiRAGInterfaceConfig = { readonly apiKey: string }
 
 export class GeminiRAGInterface extends LangchainRAGInterface<GeminiRAGInterfaceConfig> {
-    constructor(config: GeminiRAGInterfaceConfig) {
+    constructor(_config: Record<string, unknown>) {
+        const config = convertToConfig<GeminiRAGInterfaceConfig>(_config, {
+            apiKey: "",
+        })
         super(
             config,
             () =>
@@ -23,8 +27,8 @@ export class GeminiRAGInterface extends LangchainRAGInterface<GeminiRAGInterface
     }
 }
 
-export class LocalRAGInterface extends LangchainRAGInterface<never> {
-    constructor(config: never) {
+export class LocalRAGInterface extends LangchainRAGInterface<Record<never, never>> {
+    constructor(config: Record<never, never>) {
         super(
             config,
             () =>
@@ -41,7 +45,10 @@ export class LocalRAGInterface extends LangchainRAGInterface<never> {
 export type OllamaRAGInterfaceConfig = { contextWindowSize: number }
 
 export class OllamaRAGInterface extends LangchainRAGInterface<OllamaRAGInterfaceConfig> {
-    constructor(config: OllamaRAGInterfaceConfig) {
+    constructor(_config: Record<string, unknown>) {
+        const config = convertToConfig<OllamaRAGInterfaceConfig>(_config, {
+            contextWindowSize: 1000,
+        })
         super(config, () => {
             const corsHeaders = new Headers([["x-stainless-retry-count", ""]])
             return new OllamaEmbeddings({

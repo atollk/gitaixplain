@@ -1,4 +1,3 @@
-import type { RepositoryDump } from "$lib/backend/repository_dump"
 import type { ChatProviderName, EmbeddingProviderName } from "$lib/models"
 import type { DocumentInterface } from "@langchain/core/documents"
 
@@ -45,15 +44,13 @@ export abstract class AiRAGInterface<Config extends { [property: string]: unknow
 
     abstract get name(): EmbeddingProviderName
 
-    abstract getContextWindowSize(): number
-
     abstract getContext(query: string): Promise<string>
 
     abstract setDocuments(documents: DocumentInterface[]): Promise<void>
 }
 
-export abstract class AiInterface {
-    protected constructor(
+export class AiInterface {
+    constructor(
         readonly chatAi: AiChatInterface,
         readonly ragAi: AiRAGInterface
     ) {}

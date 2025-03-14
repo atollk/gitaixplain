@@ -1,15 +1,15 @@
 <script lang="ts">
     import { goto } from "$app/navigation"
     import { chatProviderList, type ChatProviderName } from "$lib/models"
-    import { GeminiInterface, GroqInterface } from "$lib/backend/langchain_implementations"
     import { base } from "$app/paths"
+    import { GeminiChatInterface, GroqChatInterface } from "$lib/backend/langchain_chat_implementations"
 
     let {
         ...props
     }: {
         initialUrl: string
         initialApiName: ChatProviderName
-        initialConfig: { [fieldName: string]: any }
+        initialConfig: { [fieldName: string]: unknown }
     } = $props()
 
     let githubUrl = $state(props.initialUrl)
@@ -18,7 +18,7 @@
 
     async function handleSubmit(e: SubmitEvent): Promise<void> {
         e.preventDefault()
-        const urlPattern = /^(?:https:\/\/)?github\.com\/([^\/]+)\/([^\/]+)/
+        const urlPattern = /^(?:https:\/\/)?github\.com\/([^/]+)\/([^/]+)/
         const match = githubUrl.match(urlPattern)
 
         if (!match) {
@@ -79,7 +79,7 @@
 
                 <select bind:value={config.model} class="select select-bordered w-full max-w-xs">
                     <option disabled selected>Model</option>
-                    {#each GeminiInterface.models as model}
+                    {#each GeminiChatInterface.models as model}
                         <option value={model.name}>{model.name}</option>
                     {/each}
                 </select>
@@ -93,7 +93,7 @@
 
                 <select bind:value={config.model} class="select select-bordered w-full max-w-xs">
                     <option disabled selected>Model</option>
-                    {#each GroqInterface.models as model}
+                    {#each GroqChatInterface.models as model}
                         <option value={model.name}>{model.name}</option>
                     {/each}
                 </select>

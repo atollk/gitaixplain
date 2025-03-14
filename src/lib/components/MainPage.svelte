@@ -7,12 +7,20 @@
     import { fetchRepoSummary } from "$lib/backend/repository_dump"
     import { AiInterface } from "$lib/backend/ai_backend"
     import ConfigForm from "$lib/components/ConfigForm.svelte"
-    import { GeminiInterface, GroqInterface, OllamaInterface } from "$lib/backend/langchain_implementations"
     import { goto } from "$app/navigation"
     import Footer from "$lib/components/Footer.svelte"
+    import {
+        GeminiChatInterface,
+        GroqChatInterface, OllamaChatInterface,
+    } from "$lib/backend/langchain_chat_implementations"
+    import {
+        GeminiRAGInterface,
+        LocalRAGInterface,
+        OllamaRAGInterface,
+    } from "$lib/backend/langchain_rag_implementations"
 
     const urlParams = $derived(page.url.searchParams)
-    const apiName = $derived(urlParams.get("api") as ChatProviderName ?? chatProviderList[0])
+    const apiName = $derived((urlParams.get("api") as ChatProviderName) ?? chatProviderList[0])
     const config = $derived(JSON.parse(urlParams.get("config") ?? "{}"))
     const gitUrl = $derived.by(() => {
         const url = urlParams.get("git")
@@ -25,21 +33,32 @@
 
     function aiInterfaceFromModelName(
         apiName: ChatProviderName,
-        config: { [property: string]: any },
-    ): AiInterface<any> {
+        config: { [property: string]: unknown },
+    ): AiInterface {
         switch (apiName) {
             case "Gemini":
-                return new GeminiInterface({
-                    apiKey: config.apiKey ?? "",
-                    model: config.model ?? GeminiInterface.models[0].name,
-                })
+                return new AiInterface(
+                    new GeminiChatInterface({
+                        apiKey: config.apiKey ?? "",
+                        model: config.model ?? GeminiChatInterface.models[0].name,
+                    }),
+                    new GeminiRAGInterface({
+                        apiKey: config.apiKey ?? "",
+                    }),
+                )
             case "Groq":
-                return new GroqInterface({
-                    apiKey: config.apiKey ?? "",
-                    model: config.model ?? GroqInterface.models[0].name,
-                })
+                return new AiInterface(
+                    new GroqChatInterface({
+                        apiKey: config.apiKey ?? "",
+                        model: config.model ?? GroqChatInterface.models[0].name,
+                    }),
+                    new LocalRAGInterface({}),
+                )
             case "Ollama":
-                return new OllamaInterface({ contextWindowSize: config.contextWindowSize ?? 4000 })
+                return new AiInterface(
+                    new OllamaChatInterface({ contextWindowSize: config.contextWindowSize ?? 4000 }),
+                    new OllamaRAGInterface(),
+                )
             default:
                 throw Error(`API ${apiName} is invalid.`)
         }
@@ -52,11 +71,7 @@
 
 <main class="container mx-auto flex max-w-6xl flex-col items-center px-4 py-8">
     <Header />
-    <ConfigForm
-        initialUrl={gitUrl}
-        initialApiName={apiName}
-        initialConfig={config}
-    />
+    <ConfigForm initialUrl={gitUrl} initialApiName={apiName} initialConfig={config} />
 
     <div class="divider my-8"></div>
 

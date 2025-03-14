@@ -94,19 +94,20 @@ async function summarizeRepoToTopLevel(
             await new Promise((r) => setTimeout(r, 10))
             // Group as many children together as possible while staying within token limit.
             const childrenGroups: { path: string; xml: string; tokens: number }[][] = []
-            for (const [child, _] of Object.values(children)) {
+            for (const child of Object.values(children)) {
+                const fileInfo = child[0]
                 let foundMatch = false
                 for (let i = 0; i < childrenGroups.length; i++) {
                     const groupTokenSum = childrenGroups[i].reduce(
                         (acc, { tokens }) => acc + tokens,
                         0,
                     )
-                    if (groupTokenSum + child.tokens < maxTokens) {
+                    if (groupTokenSum + fileInfo.tokens < maxTokens) {
                         foundMatch = true
-                        childrenGroups[i].push(child)
+                        childrenGroups[i].push(fileInfo)
                     }
                 }
-                if (!foundMatch) childrenGroups.push([child])
+                if (!foundMatch) childrenGroups.push([fileInfo])
             }
 
             // Merge the XML of all groups.

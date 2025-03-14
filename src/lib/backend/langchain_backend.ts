@@ -1,46 +1,73 @@
 import { AIMessage, HumanMessage, SystemMessage } from "@langchain/core/messages"
-import { approximateTokens, countTokens, stripBackticks } from "$lib/backend/util"
 import { BaseChatModel } from "@langchain/core/language_models/chat_models"
-import type { RepositoryDump } from "$lib/backend/repository_dump"
-import { AiInterface, type AiRepoSummary } from "$lib/backend/ai_backend"
+import {
+    AiChatInterface,
+    AiRAGInterface,
+} from "$lib/backend/ai_backend"
 import { Embeddings } from "@langchain/core/embeddings"
 import { VectorStore } from "@langchain/core/vectorstores"
 import { MemoryVectorStore } from "langchain/vectorstores/memory"
 import type { DocumentInterface } from "@langchain/core/documents"
-import { CharacterTextSplitter } from "@langchain/textsplitters"
 
-export abstract class LangchainBaseInterface<
-    Config extends { [property: string]: any },
-> extends AiInterface<Config> {
+export abstract class LangchainChatInterface<
+    Config extends { [property: string]: unknown },
+> extends AiChatInterface<Config> {
     private model?: BaseChatModel
-    private embeddings?: Embeddings
-    private vectorStore?: VectorStore
-    private vectorStoreLength: number = 0
 
     protected constructor(
         config: Config,
-        protected readonly modelGen: () => [BaseChatModel, Embeddings],
+        protected readonly modelGen: () => BaseChatModel,
     ) {
         super(config)
     }
 
     protected abstract get supportsSystemPrompt(): boolean
 
-    private initialize(): void {
-        if (this.model !== undefined) return
-        const [model, embeddings] = this.modelGen()
-        this.model = model
-        this.embeddings = embeddings
-        this.vectorStore = new MemoryVectorStore(this.embeddings)
+    async getChatResponse(
+        systemMessage: string,
+        chat: { text: string; byUser: boolean }[],
+    ): Promise<string> {
+        if (this.model === undefined) {
+            this.model = this.modelGen()
+        }
+
+        const messages = [
+            this.supportsSystemPrompt
+                ? new SystemMessage(systemMessage)
+                : new HumanMessage(systemMessage),
+        ]
+        for (const { text, byUser } of chat) {
+            messages.push(byUser ? new HumanMessage(text) : new AIMessage(text))
+        }
+
+        console.log("getChatResponse", messages)
+        const response = await this.model!.invoke(messages)
+        return response.content as string
+    }
+}
+
+export abstract class LangchainRAGInterface<
+    Config extends { [property: string]: unknown },
+> extends AiRAGInterface<Config> {
+    private embeddings?: Embeddings
+    private vectorStore?: VectorStore
+    private vectorStoreLength: number = 0
+
+    protected constructor(
+        config: Config,
+        protected readonly modelGen: () => Embeddings,
+    ) {
+        super(config)
     }
 
-
     async getContext(query: string): Promise<string> {
-        if (this.embeddings === undefined || this.vectorStore === undefined)
-            throw Error("Cannot get documents from uninitialized vector store.")
+        if (this.embeddings === undefined || this.vectorStore === undefined) {
+            throw Error("Cannot getContext from an unitialized RAG object.")
+        }
+
         // For some reason, we need to manually select the best match here even though it seems like LangChain should do that for us.
         const embed = await this.embeddings.embedQuery(query)
-        const documents = await this.vectorStore?.similaritySearchVectorWithScore(
+        const documents = await this.vectorStore.similaritySearchVectorWithScore(
             embed,
             this.vectorStoreLength,
         )
@@ -49,24 +76,14 @@ export abstract class LangchainBaseInterface<
         return bestDocument.pageContent
     }
 
-    async getChatResponse(
-        systemMessage: string,
-        chat: { text: string; byUser: boolean }[],
-    ): Promise<string> {
-        this.initialize()
-
-        const messages = [
-            this.supportsSystemPrompt
-                ? new SystemMessage(systemMessage)
-                : new HumanMessage(systemMessage),
-        ]
-        for (let { text, byUser } of chat) {
-            messages.push(byUser ? new HumanMessage(text) : new AIMessage(text))
+    async setDocuments(documents: DocumentInterface[]): Promise<void> {
+        if (this.embeddings === undefined || this.vectorStore === undefined) {
+            this.embeddings = this.modelGen()
+            this.vectorStore = new MemoryVectorStore(this.embeddings)
+            await this.vectorStore.addDocuments(documents)
+            this.vectorStoreLength = documents.length
+        } else {
+            throw Error("Vector store already initialized.")
         }
-
-        console.log("getChatResponse", messages)
-        const response = await this.model!.invoke(messages)
-        return response.content as string
     }
-
 }

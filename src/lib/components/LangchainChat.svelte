@@ -8,7 +8,7 @@
     import { marked } from "marked"
     import Loading from "$lib/components/util/Loading.svelte"
 
-    const props: { model: AiInterface<any> } = $props()
+    const props: { model: AiInterface } = $props()
 
     const messages: { text: string, byUser: boolean }[] = $state([])
     let waitingForModel = $state(false)

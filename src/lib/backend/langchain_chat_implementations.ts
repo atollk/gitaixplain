@@ -1,31 +1,28 @@
-import { ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings } from "@langchain/google-genai"
+import { ChatGoogleGenerativeAI } from "@langchain/google-genai"
 import { ChatGroq } from "@langchain/groq"
-import { LangchainBaseInterface } from "$lib/backend/langchain_backend"
-import { ChatOllama, OllamaEmbeddings } from "@langchain/ollama"
+import { LangchainChatInterface } from "$lib/backend/langchain_backend"
+import { ChatOllama } from "@langchain/ollama"
 import type { ChatProviderName } from "$lib/models"
-import { HuggingFaceTransformersEmbeddings } from "@langchain/community/embeddings/huggingface_transformers"
 import { ChatAnthropic } from "@langchain/anthropic"
 
-type GeminiInterfaceConfig = { readonly apiKey: string; readonly model: string }
+type GeminiChatInterfaceConfig = { readonly apiKey: string; readonly model: string }
 
-export class GeminiInterface extends LangchainBaseInterface<GeminiInterfaceConfig> {
+export class GeminiChatInterface extends LangchainChatInterface<GeminiChatInterfaceConfig> {
     private readonly contextWindowSize: number
 
-    constructor(config: GeminiInterfaceConfig) {
-        const model = GeminiInterface.models.find(({ name }) => name !== config.model)
+    constructor(config: GeminiChatInterfaceConfig) {
+        const model = GeminiChatInterface.models.find(({ name }) => name !== config.model)
         if (model === undefined) {
             throw Error(`Invalid Gemini model: ${config.model}`)
         }
-        super(config, () => [
-            new ChatGoogleGenerativeAI({
-                model: config.model,
-                apiKey: config.apiKey,
-            }),
-            new GoogleGenerativeAIEmbeddings({
-                model: "text-embedding-004",
-                apiKey: config.apiKey,
-            }),
-        ])
+        super(
+            config,
+            () =>
+                new ChatGoogleGenerativeAI({
+                    model: config.model,
+                    apiKey: config.apiKey,
+                }),
+        )
         this.contextWindowSize = model.contextSize
     }
 
@@ -49,24 +46,24 @@ export class GeminiInterface extends LangchainBaseInterface<GeminiInterfaceConfi
     }
 }
 
-export type GroqInterfaceConfig = { readonly apiKey: string; readonly model: string }
+export type GroqChatInterfaceConfig = { readonly apiKey: string; readonly model: string }
 
-export class GroqInterface extends LangchainBaseInterface<GroqInterfaceConfig> {
+export class GroqChatInterface extends LangchainChatInterface<GroqChatInterfaceConfig> {
     private readonly contextWindowSize: number
 
-    constructor(config: GroqInterfaceConfig) {
-        const model = GroqInterface.models.find(({ name }) => name === config.model)
+    constructor(config: GroqChatInterfaceConfig) {
+        const model = GroqChatInterface.models.find(({ name }) => name === config.model)
         if (model === undefined) {
             throw Error(`Invalid Groq model: ${config.model}`)
         }
-        super(config, () => [
-            new ChatGroq({
-                model: config.model,
-                apiKey: config.apiKey,
-            }),
-            // TODO: do the embeddings setup async
-            new HuggingFaceTransformersEmbeddings({ model: "Xenova/all-MiniLM-L6-v2" }),
-        ])
+        super(
+            config,
+            () =>
+                new ChatGroq({
+                    model: config.model,
+                    apiKey: config.apiKey,
+                }),
+        )
         this.contextWindowSize = model.contextSize
     }
 
@@ -93,32 +90,32 @@ export class GroqInterface extends LangchainBaseInterface<GroqInterfaceConfig> {
     }
 }
 
-export type AnthropicInterfaceConfig = { readonly apiKey: string; readonly model: string }
+export type AnthropicChatInterfaceConfig = { readonly apiKey: string; readonly model: string }
 
-export class AnthropicInterface extends LangchainBaseInterface<AnthropicInterfaceConfig> {
+export class AnthropicChatInterface extends LangchainChatInterface<AnthropicChatInterfaceConfig> {
     private readonly contextWindowSize: number
 
-    constructor(config: AnthropicInterfaceConfig) {
-        const model = AnthropicInterface.models.find(({ name }) => name === config.model)
+    constructor(config: AnthropicChatInterfaceConfig) {
+        const model = AnthropicChatInterface.models.find(({ name }) => name === config.model)
         if (model === undefined) {
             throw Error(`Invalid Anthropic model: ${config.model}`)
         }
-        super(config, () => [
-            new ChatAnthropic({
-                model: config.model,
-                apiKey: config.apiKey,
-            }),
-            // TODO: do the embeddings setup async
-            new HuggingFaceTransformersEmbeddings({ model: "Xenova/all-MiniLM-L6-v2" }),
-        ])
+        super(
+            config,
+            () =>
+                new ChatAnthropic({
+                    model: config.model,
+                    apiKey: config.apiKey,
+                }),
+        )
         this.contextWindowSize = model.contextSize
     }
 
     static models = [
-        {name: "claude-3-7-sonnet-20250219", contextSize: 200_000 },
-        {name: "claude-3-5-haiku-20241022", contextSize: 200_000 },
-        {name: "claude-3-opus-20240229", contextSize: 200_000 },
-        {name: "claude-3-haiku-20240307", contextSize: 200_000 },
+        { name: "claude-3-7-sonnet-20250219", contextSize: 200_000 },
+        { name: "claude-3-5-haiku-20241022", contextSize: 200_000 },
+        { name: "claude-3-opus-20240229", contextSize: 200_000 },
+        { name: "claude-3-haiku-20240307", contextSize: 200_000 },
     ]
 
     get name(): ChatProviderName {
@@ -134,15 +131,14 @@ export class AnthropicInterface extends LangchainBaseInterface<AnthropicInterfac
     }
 }
 
+export type OllamaChatInterfaceConfig = { contextWindowSize: number }
 
-export type OllamaInterfaceConfig = { contextWindowSize: number }
-
-export class OllamaInterface extends LangchainBaseInterface<OllamaInterfaceConfig> {
+export class OllamaChatInterface extends LangchainChatInterface<OllamaChatInterfaceConfig> {
     static models = { ["gemma2:2b"]: { maxContext: 8192 } }
 
-    constructor(config: OllamaInterfaceConfig) {
+    constructor(config: OllamaChatInterfaceConfig) {
         super(config, () => {
-            const baseModel = OllamaInterface.models["gemma2:2b"]
+            const baseModel = OllamaChatInterface.models["gemma2:2b"]
 
             const corsHeaders = new Headers([["x-stainless-retry-count", ""]])
 
@@ -153,12 +149,7 @@ export class OllamaInterface extends LangchainBaseInterface<OllamaInterfaceConfi
             })
             // Ollama silently cuts off content beyond the context window size, so we add a buffer to have more explicit control.
             model.numCtx = Math.min(this.getContextWindowSize() * 2, baseModel.maxContext)
-
-            const embeddings = new OllamaEmbeddings({
-                model: "mxbai-embed-large",
-                headers: corsHeaders,
-            })
-            return [model, embeddings]
+            return model
         })
     }
 

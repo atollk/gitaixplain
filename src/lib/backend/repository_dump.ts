@@ -36,7 +36,7 @@ export class FileTree<DirectoryInfo, FileInfo> {
         const rmis: RMI[] = fileNodesMap
             .entries()
             .map(([path, content]) => {
-                let pathSegments = path.split("/")
+                const pathSegments = path.split("/")
                 let subRmi: RMI[string]
                 subRmi = [{ path, content }, null] as const
                 for (let i = pathSegments.length - 2; i >= 0; i--) {

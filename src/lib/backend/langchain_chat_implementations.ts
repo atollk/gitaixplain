@@ -2,9 +2,25 @@ import { ChatGoogleGenerativeAI } from "@langchain/google-genai"
 import { ChatGroq } from "@langchain/groq"
 import { LangchainChatInterface } from "$lib/backend/langchain_backend"
 import { ChatOllama } from "@langchain/ollama"
-import type { ChatProviderName } from "$lib/models"
+import type { ChatProviderName, EmbeddingProviderName } from "$lib/models"
 import { ChatAnthropic } from "@langchain/anthropic"
 import { convertToConfig } from "$lib/backend/util"
+import { type AiChatInterface, AiRAGInterface } from "$lib/backend/ai_backend"
+
+export function chatProviderNameToInterface(name: ChatProviderName): {new(config: Record<string, unknown>): AiChatInterface } {
+    switch (name) {
+        case "Gemini":
+            return GeminiChatInterface
+        case "Groq":
+            return GroqChatInterface
+        case "Anthropic":
+            return AnthropicChatInterface
+        case "Ollama":
+            return OllamaChatInterface
+        default:
+            throw new Error(`Unknown chat provider ${name}`)
+    }
+}
 
 type GeminiChatInterfaceConfig = { readonly apiKey: string; readonly model: string }
 

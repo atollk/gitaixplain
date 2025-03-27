@@ -8,24 +8,27 @@
     } from "$lib/models"
     import { base } from "$app/paths"
     import {
+        chatProviderNameToInterface,
         GeminiChatInterface,
         GroqChatInterface,
     } from "$lib/backend/langchain_chat_implementations"
-    import { GeminiRAGInterface } from "$lib/backend/langchain_rag_implementations"
+    import { type AiChatInterface, AiRAGInterface } from "$lib/backend/ai_backend"
+    import { embeddingProviderNameToInterface } from "$lib/backend/langchain_rag_implementations"
 
-    let {
-        ...props
-    }: {
-        initialUrl: string
-        initialChatProviderName: ChatProviderName
-        initialEmbeddingProviderName: EmbeddingProviderName
-        initialConfig: { [fieldName: string]: unknown }
-    } = $props()
-
-    let githubUrl = $state(props.initialUrl)
-    let chatProviderName: ChatProviderName = $state(props.initialChatProviderName)
-    let embeddingProviderName: EmbeddingProviderName | null = $state(props.initialEmbeddingProviderName)
-    let config = $state(props.initialConfig)
+    let githubUrl = $state("")
+    let chatProviderName: ChatProviderName = $state(chatProviderList[0])
+    let embeddingProviderName: EmbeddingProviderName | null = $state(null)
+    let chatProvider: AiChatInterface = $derived.by(() => {
+        const clas = chatProviderNameToInterface(chatProviderName)
+        return new clas(config)
+    })
+    let embeddingProvider: AiRAGInterface | null = $derived.by(() => {
+        if (embeddingProviderName === null)
+            return null
+        const clas = embeddingProviderNameToInterface(embeddingProviderName)
+        return new clas(config)
+    })
+    let config: Record<string, unknown> = $state({})
 
     async function handleSubmit(e: SubmitEvent): Promise<void> {
         e.preventDefault()
@@ -173,6 +176,7 @@
         <div class="flex flex-col gap-2 w-lg">
             {#if embeddingProviderName === null}
                 {#if chatProviderName === "Gemini" || chatProviderName === "Ollama"}
+                    TODO
                 {:else}
                     <div role="alert" class="alert alert-warning">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 stroke-current" fill="none"

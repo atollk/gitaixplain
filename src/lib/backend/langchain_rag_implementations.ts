@@ -4,6 +4,23 @@ import { OllamaEmbeddings } from "@langchain/ollama"
 import type { EmbeddingProviderName } from "$lib/models"
 import { HuggingFaceTransformersEmbeddings } from "@langchain/community/embeddings/huggingface_transformers"
 import { convertToConfig } from "$lib/backend/util"
+import { AiRAGInterface } from "$lib/backend/ai_backend"
+
+export function embeddingProviderNameToInterface(name: EmbeddingProviderName): {new(config: Record<string, unknown>): AiRAGInterface} {
+    switch (name) {
+        case "Gemini":
+            return GeminiRAGInterface
+        case "Voayge":
+            // TODO
+            throw new Error("not implemented")
+        case "Ollama":
+            return OllamaRAGInterface
+        case "local":
+            return LocalRAGInterface
+        default:
+            throw new Error(`Unknown chat provider ${name}`)
+    }
+}
 
 type GeminiRAGInterfaceConfig = { readonly apiKey: string }
 

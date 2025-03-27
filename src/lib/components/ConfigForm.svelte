@@ -1,19 +1,30 @@
 <script lang="ts">
     import { goto } from "$app/navigation"
-    import { chatProviderList, type ChatProviderName } from "$lib/models"
+    import {
+        chatProviderList,
+        type ChatProviderName,
+        embeddingProviderList,
+        type EmbeddingProviderName,
+    } from "$lib/models"
     import { base } from "$app/paths"
-    import { GeminiChatInterface, GroqChatInterface } from "$lib/backend/langchain_chat_implementations"
+    import {
+        GeminiChatInterface,
+        GroqChatInterface,
+    } from "$lib/backend/langchain_chat_implementations"
+    import { GeminiRAGInterface } from "$lib/backend/langchain_rag_implementations"
 
     let {
         ...props
     }: {
         initialUrl: string
-        initialApiName: ChatProviderName
+        initialChatProviderName: ChatProviderName
+        initialEmbeddingProviderName: EmbeddingProviderName
         initialConfig: { [fieldName: string]: unknown }
     } = $props()
 
     let githubUrl = $state(props.initialUrl)
-    let apiName = $state(props.initialApiName)
+    let chatProviderName: ChatProviderName = $state(props.initialChatProviderName)
+    let embeddingProviderName: EmbeddingProviderName | null = $state(props.initialEmbeddingProviderName)
     let config = $state(props.initialConfig)
 
     async function handleSubmit(e: SubmitEvent): Promise<void> {
@@ -29,7 +40,7 @@
 
         const [, owner, repo] = match
         const queryParams = new URLSearchParams({
-            api: apiName,
+            api: chatProviderName,
             config: JSON.stringify(config),
             git: `https://github.com/${owner}/${repo}`,
         })
@@ -48,14 +59,18 @@
         />
     </div>
 
+    <div class="divider">
+        Model Provider
+    </div>
+
     <div class="flex gap-4">
-        <select bind:value={apiName} class="select select-bordered w-40">
-            {#each chatProviderList as model}
-                <option value={model}>{model}</option>
+        <select bind:value={chatProviderName} class="select select-bordered w-40">
+            {#each chatProviderList as provider}
+                <option value={provider}>{provider}</option>
             {/each}
         </select>
 
-        <div class="h-10 flex items-center">
+        <div class="flex h-10 items-center">
             <a
                 class="badge badge-info badge-sm"
                 href="https://www.github.com/atollk/gitaixplain/tree/main/docs/ModelConfig.md"
@@ -66,53 +81,123 @@
             </a>
         </div>
 
-        {#if apiName === "Gemini"}
-            <div class="flex flex-col gap-2">
-                <div class="flex items-center">
-                    <label
-                        class="input input-bordered flex cursor-default items-center gap-2 select-none"
+        <div class="flex flex-col gap-2 w-lg">
+            {#if chatProviderName === "Gemini"}
+                <div class="flex flex-col gap-2">
+                    <div class="flex items-center">
+                        <label
+                            class="input input-bordered flex cursor-default items-center gap-2 select-none"
+                        >
+                            API Key:
+                            <input type="text" class="grow" bind:value={config.apiKey} />
+                        </label>
+                    </div>
+
+                    <select
+                        bind:value={config.model}
+                        class="select select-bordered w-full max-w-xs"
                     >
+                        <option disabled selected>Model</option>
+                        {#each GeminiChatInterface.models as model}
+                            <option value={model.name}>{model.name}</option>
+                        {/each}
+                    </select>
+                </div>
+            {:else if chatProviderName === "Groq"}
+                <div class="flex flex-col gap-2">
+                    <label class="input input-bordered flex items-center gap-2">
                         API Key:
                         <input type="text" class="grow" bind:value={config.apiKey} />
                     </label>
+
+                    <select
+                        bind:value={config.model}
+                        class="select select-bordered w-full max-w-xs"
+                    >
+                        <option disabled selected>Model</option>
+                        {#each GroqChatInterface.models as model}
+                            <option value={model.name}>{model.name}</option>
+                        {/each}
+                    </select>
                 </div>
+            {:else if chatProviderName === "Ollama"}
+                <div class="flex flex-col gap-2">
+                    <label class="input input-bordered flex items-center gap-2">
+                        Context Size:
+                        <input type="number" class="grow" bind:value={config.contextWindowSize} />
+                    </label>
 
-                <select bind:value={config.model} class="select select-bordered w-full max-w-xs">
-                    <option disabled selected>Model</option>
-                    {#each GeminiChatInterface.models as model}
-                        <option value={model.name}>{model.name}</option>
-                    {/each}
-                </select>
-            </div>
-        {:else if apiName === "Groq"}
-            <div class="flex flex-col gap-2">
-                <label class="input input-bordered flex items-center gap-2">
-                    API Key:
-                    <input type="text" class="grow" bind:value={config.apiKey} />
-                </label>
-
-                <select bind:value={config.model} class="select select-bordered w-full max-w-xs">
-                    <option disabled selected>Model</option>
-                    {#each GroqChatInterface.models as model}
-                        <option value={model.name}>{model.name}</option>
-                    {/each}
-                </select>
-            </div>
-        {:else if apiName === "Ollama"}
-            <div class="flex flex-col items-center gap-2">
-                <label class="input input-bordered flex items-center gap-2">
-                    Context Size:
-                    <input type="number" class="grow" bind:value={config.contextWindowSize} />
-                </label>
-
-                <div class="tooltip">
-                    <div class="tooltip-content">hello</div>
-                    <div class="badge badge-info">CORS setup</div>
+                    <div class="tooltip">
+                        <div class="tooltip-content">hello</div>
+                        <div class="badge badge-info">CORS setup</div>
+                    </div>
                 </div>
-            </div>
-        {:else}
-            Error. Unknown API {apiName}
-        {/if}
+            {:else}
+                Error. Unknown provider {chatProviderName}
+            {/if}
+
+            <details class="collapse-arrow bg-base-100 border-base-300 collapse border">
+                <summary class="collapse-title font-semibold">How do I create an account?</summary>
+                <div class="collapse-content text-sm">
+                    Click the "Sign Up" button in the top right corner and follow the registration
+                    process.
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <div class="divider">
+        Embedding Provider
+    </div>
+
+
+    <div class="flex gap-4">
+        <select bind:value={embeddingProviderName} class="select select-bordered w-40">
+            <option value={null}>(same as model provider)</option>
+            {#each embeddingProviderList as provider}
+                <option value={provider}>{provider}</option>
+            {/each}
+        </select>
+
+        <div class="flex h-10 items-center">
+            <a
+                class="badge badge-info badge-sm"
+                href="https://www.github.com/atollk/gitaixplain/tree/main/docs/ModelConfig.md"
+                rel="external"
+                target="_blank"
+            >
+                ?
+            </a>
+        </div>
+
+        <div class="flex flex-col gap-2 w-lg">
+            {#if embeddingProviderName === null}
+                {#if chatProviderName === "Gemini" || chatProviderName === "Ollama"}
+                {:else}
+                    <div role="alert" class="alert alert-warning">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 stroke-current" fill="none"
+                             viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <span>The selected model provider does not support embeddings. Certain features will be unavailable or of reduced quality.</span>
+                    </div>
+                {/if}
+            {:else if embeddingProviderName === "Gemini"}
+                <div class="flex flex-col gap-2">
+                    <div class="flex items-center">
+                        <label
+                            class="input input-bordered flex cursor-default items-center gap-2 select-none"
+                        >
+                            API Key:
+                            <input type="text" class="grow" bind:value={config.apiKey} />
+                        </label>
+                    </div>
+                </div>
+            {:else}
+                Error. Unknown provider {embeddingProviderName}
+            {/if}
+        </div>
     </div>
 
     <button type="submit" class="btn btn-primary w-full">Submit</button>

@@ -10,6 +10,7 @@
     import { goto } from "$app/navigation"
     import Footer from "$lib/components/Footer.svelte"
     import {
+        AnthropicChatInterface,
         GeminiChatInterface,
         GroqChatInterface,
         OllamaChatInterface,
@@ -43,7 +44,12 @@
                     new GeminiRAGInterface(config),
                 )
             case "Groq":
-                return new AiInterface(new GroqChatInterface(config), new LocalRAGInterface({}))
+                return new AiInterface(new GroqChatInterface(config), new LocalRAGInterface(config))
+            case "Anthropic":
+                return new AiInterface(
+                    new AnthropicChatInterface(config),
+                    new LocalRAGInterface(config),
+                )
             case "Ollama":
                 return new AiInterface(
                     new OllamaChatInterface(config),

@@ -37,7 +37,7 @@ export abstract class AiChatInterface {
     ): Promise<string>
 }
 
-export abstract class AiRAGInterface {
+export abstract class AiEmbeddingInterface {
     abstract get name(): EmbeddingProviderName
 
     abstract getContext(query: string): Promise<string>
@@ -47,7 +47,7 @@ export abstract class AiRAGInterface {
 
 export class AiInterface {
     constructor(
-        readonly chatAi: AiChatInterface,
-        readonly ragAi: AiRAGInterface
+        readonly chatInterface: AiChatInterface,
+        readonly embeddingInterface: AiEmbeddingInterface
     ) {}
 }

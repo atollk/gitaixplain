@@ -1,6 +1,6 @@
 import { AIMessage, HumanMessage, SystemMessage } from "@langchain/core/messages"
 import { BaseChatModel } from "@langchain/core/language_models/chat_models"
-import { AiChatInterface, AiRAGInterface } from "$lib/backend/ai_backend"
+import { AiChatInterface, AiEmbeddingInterface } from "$lib/backend/ai_backend"
 import { Embeddings } from "@langchain/core/embeddings"
 import { VectorStore } from "@langchain/core/vectorstores"
 import { MemoryVectorStore } from "langchain/vectorstores/memory"
@@ -12,7 +12,7 @@ export abstract class LangchainChatInterface<
     private model?: BaseChatModel
 
     protected constructor(
-        protected readonly config: Config,
+        public readonly config: Config,
         protected readonly modelGen: () => BaseChatModel,
     ) {
         super()
@@ -43,15 +43,15 @@ export abstract class LangchainChatInterface<
     }
 }
 
-export abstract class LangchainRAGInterface<
+export abstract class LangchainEmbeddingInterface<
     Config extends Record<string, unknown>,
-> extends AiRAGInterface {
+> extends AiEmbeddingInterface {
     private embeddings?: Embeddings
     private vectorStore?: VectorStore
     private vectorStoreLength: number = 0
 
     protected constructor(
-        protected readonly config: Config,
+        public readonly config: Config,
         protected readonly modelGen: () => Embeddings,
     ) {
         super()
@@ -59,7 +59,7 @@ export abstract class LangchainRAGInterface<
 
     async getContext(query: string): Promise<string> {
         if (this.embeddings === undefined || this.vectorStore === undefined) {
-            throw Error("Cannot getContext from an unitialized RAG object.")
+            throw Error("Cannot getContext from an unitialized Embedding object.")
         }
 
         // For some reason, we need to manually select the best match here even though it seems like LangChain should do that for us.

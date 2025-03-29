@@ -3,10 +3,10 @@
     import LangchainExplain from "$lib/components/LangchainExplain.svelte"
     import Loading from "$lib/components/util/Loading.svelte"
     import { fetchRepoSummary } from "$lib/backend/repository_dump"
-    import ConfigForm from "$lib/components/ConfigForm.svelte"
     import Footer from "$lib/components/Footer.svelte"
     import { store } from "$lib/store.svelte"
     import { AiInterface } from "$lib/backend/ai_backend"
+    import ConfigForm from "$lib/components/config/ConfigForm.svelte"
 
     let repoSummary = $derived.by(() => {
         if (store.gitUrl) {
@@ -16,8 +16,8 @@
         }
     })
     let aiInterface = $derived.by(() => {
-        if (store.chatInterface && store.ragInterface) {
-            return new AiInterface(store.chatInterface, store.ragInterface)
+        if (store.chatInterface && store.embeddingInterface) {
+            return new AiInterface(store.chatInterface, store.embeddingInterface)
         } else {
             return null
         }

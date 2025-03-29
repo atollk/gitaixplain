@@ -4,10 +4,12 @@ import { LangchainChatInterface } from "$lib/backend/langchain_backend"
 import { ChatOllama } from "@langchain/ollama"
 import type { ChatProviderName, EmbeddingProviderName } from "$lib/models"
 import { ChatAnthropic } from "@langchain/anthropic"
-import { convertToConfig } from "$lib/backend/util"
-import { type AiChatInterface, AiRAGInterface } from "$lib/backend/ai_backend"
+import { type AiChatInterface, AiEmbeddingInterface } from "$lib/backend/ai_backend"
+import { convertToConfig } from "$lib/backend/util.svelte"
 
-export function chatProviderNameToInterface(name: ChatProviderName): {new(config: Record<string, unknown>): AiChatInterface } {
+export function chatProviderNameToInterface(name: ChatProviderName): {
+    new (config: Record<string, unknown>): AiChatInterface
+} {
     switch (name) {
         case "Gemini":
             return GeminiChatInterface
@@ -22,29 +24,22 @@ export function chatProviderNameToInterface(name: ChatProviderName): {new(config
     }
 }
 
-type GeminiChatInterfaceConfig = { readonly apiKey: string; readonly model: string }
+type GeminiChatInterfaceConfig = { apiKey: string; modelName: string }
 
 export class GeminiChatInterface extends LangchainChatInterface<GeminiChatInterfaceConfig> {
-    private readonly contextWindowSize: number
-
     constructor(_config: Record<string, unknown>) {
         const config = convertToConfig<GeminiChatInterfaceConfig>(_config, {
             apiKey: "",
-            model: GeminiChatInterface.models[0].name,
+            modelName: GeminiChatInterface.models[0].name,
         })
-        const model = GeminiChatInterface.models.find(({ name }) => name !== config.model)
-        if (model === undefined) {
-            throw Error(`Invalid Gemini model: ${config.model}`)
-        }
         super(
             config,
             () =>
                 new ChatGoogleGenerativeAI({
-                    model: config.model,
+                    model: config.modelName,
                     apiKey: config.apiKey,
                 }),
         )
-        this.contextWindowSize = model.contextSize
     }
 
     static models = [
@@ -53,6 +48,12 @@ export class GeminiChatInterface extends LangchainChatInterface<GeminiChatInterf
         { name: "gemini-1.5-flash-8b", contextSize: 1_000_000 },
         { name: "gemini-2.0-flash", contextSize: 1_000_000 },
     ]
+
+    get modelInfo(): (typeof GeminiChatInterface.models)[number] {
+        const model = GeminiChatInterface.models.find(({ name }) => name !== this.config.modelName)
+        if (!model) throw Error(`Invalid Gemini model: ${this.config.modelName}`)
+        return model
+    }
 
     get name(): ChatProviderName {
         return "Gemini"
@@ -63,33 +64,26 @@ export class GeminiChatInterface extends LangchainChatInterface<GeminiChatInterf
     }
 
     getContextWindowSize(): number {
-        return this.contextWindowSize
+        return this.modelInfo.contextSize
     }
 }
 
-export type GroqChatInterfaceConfig = { readonly apiKey: string; readonly model: string }
+export type GroqChatInterfaceConfig = { apiKey: string; modelName: string }
 
 export class GroqChatInterface extends LangchainChatInterface<GroqChatInterfaceConfig> {
-    private readonly contextWindowSize: number
-
     constructor(_config: Record<string, unknown>) {
         const config = convertToConfig<GroqChatInterfaceConfig>(_config, {
             apiKey: "",
-            model: GroqChatInterface.models[0].name,
+            modelName: GroqChatInterface.models[0].name,
         })
-        const model = GroqChatInterface.models.find(({ name }) => name === config.model)
-        if (model === undefined) {
-            throw Error(`Invalid Groq model: ${config.model}`)
-        }
         super(
             config,
             () =>
                 new ChatGroq({
-                    model: config.model,
+                    model: config.modelName,
                     apiKey: config.apiKey,
                 }),
         )
-        this.contextWindowSize = model.contextSize
     }
 
     static models = [
@@ -102,6 +96,12 @@ export class GroqChatInterface extends LangchainChatInterface<GroqChatInterfaceC
         { name: "mixtral-8x7b-32768", contextSize: 32_000 },
     ]
 
+    get modelInfo(): (typeof GeminiChatInterface.models)[number] {
+        const model = GeminiChatInterface.models.find(({ name }) => name !== this.config.modelName)
+        if (!model) throw Error(`Invalid Gemini model: ${this.config.modelName}`)
+        return model
+    }
+
     get name(): ChatProviderName {
         return "Groq"
     }
@@ -111,33 +111,26 @@ export class GroqChatInterface extends LangchainChatInterface<GroqChatInterfaceC
     }
 
     getContextWindowSize(): number {
-        return this.contextWindowSize
+        return this.modelInfo.contextSize
     }
 }
 
-export type AnthropicChatInterfaceConfig = { readonly apiKey: string; readonly model: string }
+export type AnthropicChatInterfaceConfig = { apiKey: string; modelName: string }
 
 export class AnthropicChatInterface extends LangchainChatInterface<AnthropicChatInterfaceConfig> {
-    private readonly contextWindowSize: number
-
     constructor(_config: Record<string, unknown>) {
         const config = convertToConfig<AnthropicChatInterfaceConfig>(_config, {
             apiKey: "",
-            model: AnthropicChatInterface.models[0].name,
+            modelName: AnthropicChatInterface.models[0].name,
         })
-        const model = AnthropicChatInterface.models.find(({ name }) => name === config.model)
-        if (model === undefined) {
-            throw Error(`Invalid Anthropic model: ${config.model}`)
-        }
         super(
             config,
             () =>
                 new ChatAnthropic({
-                    model: config.model,
+                    model: config.modelName,
                     apiKey: config.apiKey,
                 }),
         )
-        this.contextWindowSize = model.contextSize
     }
 
     static models = [
@@ -146,6 +139,12 @@ export class AnthropicChatInterface extends LangchainChatInterface<AnthropicChat
         { name: "claude-3-opus-20240229", contextSize: 200_000 },
         { name: "claude-3-haiku-20240307", contextSize: 200_000 },
     ]
+
+    get modelInfo(): (typeof GeminiChatInterface.models)[number] {
+        const model = GeminiChatInterface.models.find(({ name }) => name !== this.config.modelName)
+        if (!model) throw Error(`Invalid Gemini model: ${this.config.modelName}`)
+        return model
+    }
 
     get name(): ChatProviderName {
         return "Anthropic"
@@ -156,7 +155,7 @@ export class AnthropicChatInterface extends LangchainChatInterface<AnthropicChat
     }
 
     getContextWindowSize(): number {
-        return this.contextWindowSize
+        return this.modelInfo.contextSize
     }
 }
 

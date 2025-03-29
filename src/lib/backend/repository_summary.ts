@@ -198,25 +198,25 @@ export async function analyzeRepo(
 ): Promise<AiRepoSummary> {
     // TODO: exclude binary files
     const maxTokens =
-        aiInterface.chatAi.getContextWindowSize() - countTokens(MESSAGE_SUMMARIZE_PARTS)
+        aiInterface.chatInterface.getContextWindowSize() - countTokens(MESSAGE_SUMMARIZE_PARTS)
 
     // TODO "paths" tag
 
     const mergedTopLevelsTree = await summarizeRepoToTopLevel(
-        aiInterface.chatAi,
+        aiInterface.chatInterface,
         repositoryDump,
         maxTokens,
     )
 
     const mergedTopLevels = Object.values(mergedTopLevelsTree.metaInfo).map((x) => x[0])
 
-    await aiInterface.ragAi.setDocuments(
+    await aiInterface.embeddingInterface.setDocuments(
         await extractVectorDocuments(repositoryDump, mergedTopLevels, maxTokens),
     )
 
     // TODO: summarize top levels between each other
 
-    let responseContent = await aiInterface.chatAi.getChatResponse(MESSAGE_ANALYZE_ENTIRE_REPO, [
+    let responseContent = await aiInterface.chatInterface.getChatResponse(MESSAGE_ANALYZE_ENTIRE_REPO, [
         {
             text: mergedTopLevels.map(({ xml }) => xml).join("\n"),
             byUser: true,

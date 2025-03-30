@@ -4,12 +4,12 @@
     import Loading from "$lib/components/util/Loading.svelte"
     import { fetchRepoSummary } from "$lib/backend/repository_dump"
     import Footer from "$lib/components/Footer.svelte"
-    import { store } from "$lib/store.svelte"
     import ConfigForm from "$lib/components/config/ConfigForm.svelte"
+    import { appStore } from "$lib/store.svelte"
 
     let repoSummary = $derived.by(() => {
-        if (store.gitUrl) {
-            return fetchRepoSummary(store.gitUrl)
+        if (appStore.gitUrl) {
+            return fetchRepoSummary(appStore.gitUrl)
         } else {
             return null
         }
@@ -22,13 +22,13 @@
 
     <div class="divider my-8"></div>
 
-    {#if store.gitUrl === undefined || repoSummary === null || store.aiInterface === undefined}
+    {#if appStore.gitUrl === undefined || repoSummary === null || appStore.aiInterface === undefined}
         <div></div>
     {:else}
         {#await repoSummary}
             <Loading message="Loading your repository" />
         {:then repoSummary}
-            <LangchainExplain repoLink={store.gitUrl} interface={store.aiInterface} {repoSummary} />
+            <LangchainExplain repoLink={appStore.gitUrl} interface={appStore.aiInterface} {repoSummary} />
         {/await}
     {/if}
 </main>

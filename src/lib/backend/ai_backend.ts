@@ -28,6 +28,7 @@ export interface AiRepoSummary {
 
 export abstract class AiChatInterface {
     abstract get name(): ChatProviderName
+    abstract get config(): Record<string, unknown>
 
     abstract getContextWindowSize(): number
 
@@ -44,6 +45,7 @@ export abstract class AiChatInterface {
 
 export abstract class AiEmbeddingInterface {
     abstract get name(): EmbeddingProviderName
+    abstract get config(): Record<string, unknown>
 
     abstract getContext(query: string): Promise<string>
 

@@ -14,34 +14,42 @@
     import { embeddingProviderNameToInterface } from "$lib/backend/langchain_embedding_implementations"
     import ChatProviderConfig from "$lib/components/config/ChatProviderConfig.svelte"
     import EmbeddingProviderConfig from "$lib/components/config/EmbeddingProviderConfig.svelte"
-    import { store } from "$lib/store.svelte"
+    import { appStore } from "$lib/store.svelte"
 
     export function showModal() {
         dialogElement?.showModal()
     }
 
     let chatProviderSelectElement: HTMLSelectElement | undefined = $state()
+    let embeddingProviderSelectElement: HTMLSelectElement | undefined = $state()
     let dialogElement: HTMLDialogElement | undefined = $state()
 
-    let embeddingProviderName: EmbeddingProviderName = $state(embeddingProviderList[0])
-    let chatProvider: AiChatInterface = $state(getChatProvider())
-    let embeddingProvider: AiEmbeddingInterface | null = $derived.by(() => {
-        if (embeddingProviderName === null) return null
-        const clas = embeddingProviderNameToInterface(embeddingProviderName)
-        return new clas({})
-    })
+    let chatProvider: AiChatInterface = $state(
+        appStore.aiInterface?.chatInterface ?? getChatProvider(),
+    )
+    let embeddingProvider: AiEmbeddingInterface | null = $state(
+        appStore.aiInterface?.embeddingInterface ?? getEmbeddingProvider(),
+    )
 
     let useCustomEmbedding = $state(false)
-    let saveSettings = $state(false)
+    let saveSettings = $state(appStore.useLocalStorage)
 
     function getChatProvider(): AiChatInterface {
         const name = (chatProviderSelectElement?.value as ChatProviderName) ?? chatProviderList[0]
         const clas = chatProviderNameToInterface(name)
         return new clas({})
     }
+    function getEmbeddingProvider(): AiEmbeddingInterface | null {
+        const name =
+            (embeddingProviderSelectElement?.value as EmbeddingProviderName) ??
+            embeddingProviderList[0]
+        const clas = embeddingProviderNameToInterface(name)
+        return new clas({})
+    }
 
-    async function handleSubmit(e: SubmitEvent): Promise<void> {
-        store.aiInterface = new AiInterface(
+    async function handleSubmit(): Promise<void> {
+        appStore.useLocalStorage = saveSettings
+        appStore.aiInterface = new AiInterface(
             chatProvider,
             useCustomEmbedding
                 ? embeddingProvider
@@ -49,14 +57,14 @@
                   ? chatProvider.getEmbeddingProvider()
                   : null,
         )
-        store.aiInterface.chatInterface.reset()
-        store.aiInterface.embeddingInterface?.reset()
+        appStore.aiInterface.chatInterface.reset()
+        appStore.aiInterface.embeddingInterface?.reset()
     }
 </script>
 
 <dialog bind:this={dialogElement} class="modal">
     <div class="modal-box">
-        <form method="dialog" onsubmit={(e) => handleSubmit(e)} class="flex flex-col gap-6">
+        <form method="dialog" onsubmit={handleSubmit} class="flex flex-col gap-6">
             <div class="divider">Chat Model</div>
 
             <div class="flex gap-4">
@@ -103,7 +111,10 @@
                 {#if useCustomEmbedding}
                     <div class="flex gap-4">
                         <select
-                            bind:value={embeddingProviderName}
+                            bind:this={embeddingProviderSelectElement}
+                            onchange={() => {
+                                embeddingProvider = getEmbeddingProvider()
+                            }}
                             class="select select-bordered w-40"
                         >
                             {#each embeddingProviderList as provider}

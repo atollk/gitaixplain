@@ -1,5 +1,6 @@
 <script lang="ts">
     import ConfigModal from "$lib/components/config/ConfigModal.svelte"
+    import { appStore } from "$lib/store.svelte"
 
     let githubUrl = $state("")
     let configModal: ConfigModal | undefined = $state()
@@ -13,6 +14,7 @@
             alert("Please enter a valid GitHub repository URL")
             return
         }
+        appStore.gitUrl = githubUrl
     }
 </script>
 
@@ -28,10 +30,10 @@
 
     <div class="flex gap-6">
         <button class="btn w-48" type="button" onclick={() => configModal?.showModal()}>
-            Configure APIs
+            Configure
         </button>
 
-        <button type="submit" class="btn btn-primary w-48">Submit</button>
+        <button type="submit" class="btn btn-primary w-48"> Explain </button>
     </div>
 </form>
 

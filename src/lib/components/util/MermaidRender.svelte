@@ -20,14 +20,16 @@
             console.error(`Could not render Mermaid: ${err}`)
         }
 
-        renderPromise.then(() => {
-            // Wait for next tick to ensure the SVG is in the DOM
-            Promise.resolve().then(() => {
-                if (svgElement) {
-                    createPanZoom(svgElement, {})
-                }
+        renderPromise
+            .then(() => {
+                // Wait for next tick to ensure the SVG is in the DOM
+                Promise.resolve().then(() => {
+                    if (svgElement) {
+                        createPanZoom(svgElement, {})
+                    }
+                })
             })
-        }).catch((err) => console.error(`Could not render Mermaid: ${err}`))
+            .catch((err) => console.error(`Could not render Mermaid: ${err}`))
     })
 </script>
 

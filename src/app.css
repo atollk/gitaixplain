@@ -1,8 +1,11 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 @import "tailwindcss";
 
 @plugin "daisyui" {
-    themes: light --default, dark --prefersdark, coffee;
+    themes:
+        light --default,
+        dark --prefersdark,
+        coffee;
 }
 
 @config '../tailwind.config.ts';

@@ -13,7 +13,8 @@
     const messages: { text: string; byUser: boolean }[] = $state([])
     let waitingForModel = $state(false)
 
-    const SYSTEM_PROMPT = "Use the following context to answer questions. Be as detailed as possible, but don't make up any information that's not from the context. If you don't know an answer, say you don't know."
+    const SYSTEM_PROMPT =
+        "Use the following context to answer questions. Be as detailed as possible, but don't make up any information that's not from the context. If you don't know an answer, say you don't know."
 
     const submitMessage = async (
         ev?: SubmitEvent & { currentTarget: EventTarget & HTMLFormElement },

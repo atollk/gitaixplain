@@ -216,12 +216,15 @@ export async function analyzeRepo(
 
     // TODO: summarize top levels between each other
 
-    let responseContent = await aiInterface.chatInterface.getChatResponse(MESSAGE_ANALYZE_ENTIRE_REPO, [
-        {
-            text: mergedTopLevels.map(({ xml }) => xml).join("\n"),
-            byUser: true,
-        },
-    ])
+    let responseContent = await aiInterface.chatInterface.getChatResponse(
+        MESSAGE_ANALYZE_ENTIRE_REPO,
+        [
+            {
+                text: mergedTopLevels.map(({ xml }) => xml).join("\n"),
+                byUser: true,
+            },
+        ],
+    )
 
     responseContent = stripBackticks(responseContent, "json")
     console.log("responseContent", responseContent)

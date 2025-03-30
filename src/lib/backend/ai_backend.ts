@@ -55,6 +55,6 @@ export abstract class AiEmbeddingInterface {
 export class AiInterface {
     constructor(
         readonly chatInterface: AiChatInterface,
-        readonly embeddingInterface: AiEmbeddingInterface | null
+        readonly embeddingInterface: AiEmbeddingInterface | null,
     ) {}
 }

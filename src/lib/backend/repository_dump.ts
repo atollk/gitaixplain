@@ -9,7 +9,7 @@ type RepositoryMetaInfo<DirectoryInfo, FileInfo> = {
         | [FileInfo, null]
 }
 
-class FileTree<DirectoryInfo, FileInfo> {
+export class FileTree<DirectoryInfo, FileInfo> {
     constructor(readonly metaInfo: RepositoryMetaInfo<DirectoryInfo, FileInfo>) {}
 
     static fromFileContents(
@@ -20,7 +20,7 @@ class FileTree<DirectoryInfo, FileInfo> {
             if (lhs === undefined) return rhs ?? {}
             if (rhs === undefined) return lhs
             const result: RMI = {}
-            for (let key of Object.keys({ ...lhs, ...rhs })) {
+            for (const key of Object.keys({ ...lhs, ...rhs })) {
                 const [lhsV, rhsV] = [lhs[key], rhs[key]]
                 if (lhsV === undefined) {
                     result[key] = rhsV
@@ -36,7 +36,7 @@ class FileTree<DirectoryInfo, FileInfo> {
         const rmis: RMI[] = fileNodesMap
             .entries()
             .map(([path, content]) => {
-                let pathSegments = path.split("/")
+                const pathSegments = path.split("/")
                 let subRmi: RMI[string]
                 subRmi = [{ path, content }, null] as const
                 for (let i = pathSegments.length - 2; i >= 0; i--) {
@@ -69,7 +69,7 @@ class FileTree<DirectoryInfo, FileInfo> {
             repositoryMetaInfo: RepositoryMetaInfo<DirectoryInfo, FileInfo>,
         ): RepositoryMetaInfo<NewDirectoryInfo, NewFileInfo> {
             const result: RepositoryMetaInfo<NewDirectoryInfo, NewFileInfo> = {}
-            for (let [pathSegment, [info, rmi]] of Object.entries(repositoryMetaInfo)) {
+            for (const [pathSegment, [info, rmi]] of Object.entries(repositoryMetaInfo)) {
                 if (rmi === null) {
                     result[pathSegment] = fileMapper(info as FileInfo)
                 } else {
@@ -102,7 +102,7 @@ class FileTree<DirectoryInfo, FileInfo> {
             repositoryMetaInfo: RepositoryMetaInfo<DirectoryInfo, FileInfo>,
         ): Promise<RepositoryMetaInfo<NewDirectoryInfo, NewFileInfo>> {
             const result: RepositoryMetaInfo<NewDirectoryInfo, NewFileInfo> = {}
-            for (let [pathSegment, [info, rmi]] of Object.entries(repositoryMetaInfo)) {
+            for (const [pathSegment, [info, rmi]] of Object.entries(repositoryMetaInfo)) {
                 if (rmi === null) {
                     result[pathSegment] = await fileMapper(info as FileInfo)
                 } else {
@@ -149,7 +149,7 @@ function fileIsBinary(content: Uint8Array): boolean {
 
 async function fetchIsomorphicDump(url: string): Promise<RepositoryDump> {
     // Initialize and fetch git repository.
-    // @ts-ignore
+    // @ts-expect-error LightningFS.Options.db is incorrectly required
     const fsOptions: LightningFS.Options = { wipe: true }
     const fs = new LightningFS("fs", fsOptions)
     const dir = "/"
@@ -183,7 +183,7 @@ async function fetchIsomorphicDump(url: string): Promise<RepositoryDump> {
 
     // Create a map from file path to content.
     const fileNodesMap = new Map<string, string>()
-    for (let info of fileInfos) {
+    for (const info of fileInfos) {
         if (info.filename.startsWith(".git/")) continue
         if (info.content !== null) fileNodesMap.set(info.filename, info.content)
     }

@@ -1,5 +1,5 @@
-import type { RepositoryDump } from "$lib/backend/repo_summary_backend"
-import type { ApiName } from "$lib/models"
+import type { ChatProviderName, EmbeddingProviderName } from "$lib/models"
+import type { DocumentInterface } from "@langchain/core/documents"
 
 export interface Graph {
     nodes: string[]
@@ -26,19 +26,35 @@ export interface AiRepoSummary {
     dependencies?: string[]
 }
 
-export abstract class AiInterface<Config extends { [property: string]: any }> {
-    protected constructor(readonly config: Config) {}
+export abstract class AiChatInterface {
+    abstract get name(): ChatProviderName
 
-    abstract get name(): ApiName
-
-    abstract getContext(query: string): Promise<string>
+    abstract getContextWindowSize(): number
 
     abstract getChatResponse(
         systemMessage: string,
         chat: { text: string; byUser: boolean }[],
     ): Promise<string>
 
-    abstract analyzeRepo(repoDump: RepositoryDump): Promise<AiRepoSummary>
+    abstract providesEmbeddings(): boolean
+    abstract getEmbeddingProvider(): AiEmbeddingInterface
 
-    abstract getContextWindowSize(): number
+    abstract reset(): void
+}
+
+export abstract class AiEmbeddingInterface {
+    abstract get name(): EmbeddingProviderName
+
+    abstract getContext(query: string): Promise<string>
+
+    abstract setDocuments(documents: DocumentInterface[]): Promise<void>
+
+    abstract reset(): void
+}
+
+export class AiInterface {
+    constructor(
+        readonly chatInterface: AiChatInterface,
+        readonly embeddingInterface: AiEmbeddingInterface | null,
+    ) {}
 }

@@ -8,12 +8,17 @@
     import { marked } from "marked"
     import Loading from "$lib/components/util/Loading.svelte"
 
-    const props: { model: AiInterface<any> } = $props()
+    const props: { model: AiInterface } = $props()
 
-    const messages: { text: string, byUser: boolean }[] = $state([])
+    const messages: { text: string; byUser: boolean }[] = $state([])
     let waitingForModel = $state(false)
 
-    const submitMessage = async (ev?: SubmitEvent & { currentTarget: (EventTarget & HTMLFormElement) }) => {
+    const SYSTEM_PROMPT =
+        "Use the following context to answer questions. Be as detailed as possible, but don't make up any information that's not from the context. If you don't know an answer, say you don't know."
+
+    const submitMessage = async (
+        ev?: SubmitEvent & { currentTarget: EventTarget & HTMLFormElement },
+    ) => {
         ev?.preventDefault()
         const userMessage = editor?.getText({ blockSeparator: "\n" }) ?? ""
         messages.push({ text: userMessage, byUser: true })
@@ -21,9 +26,9 @@
 
         waitingForModel = true
         try {
-            const context: string = await props.model.getContext(userMessage)
-            const systemPrompt = `Use the following context to answer questions. Be as detailed as possible, but don't make up any information that's not from the context. If you don't know an answer, say you don't know.\n\n${context}`
-            const response = await props.model.getChatResponse(systemPrompt, messages)
+            const context = await props.model.embeddingInterface?.getContext(userMessage)
+            const systemPrompt = `${SYSTEM_PROMPT}\n\n${context}`
+            const response = await props.model.chatInterface.getChatResponse(systemPrompt, messages)
             messages.push({ text: response, byUser: false })
         } finally {
             waitingForModel = false
@@ -41,7 +46,8 @@
                         submitMessage()
                         return true
                     },
-                    "Shift-Enter": () => editor!.chain().selectParentNode().createParagraphNear().focus().run(),
+                    "Shift-Enter": () =>
+                        editor!.chain().selectParentNode().createParagraphNear().focus().run(),
                 }
             },
         })
@@ -58,19 +64,24 @@
     })
 </script>
 
-<div class="flex flex-col w-4/5">
+<div class="flex w-4/5 flex-col">
     {#each messages as message}
         <div class={["chat", message.byUser ? "chat-end" : "chat-start"]}>
             <div
-                class={["marked", "chat-bubble", "text-wrap", message.byUser ? "chat-bubble-primary" : "chat-bubble-secondary"]}>
+                class={[
+                    "marked",
+                    "chat-bubble",
+                    "text-wrap",
+                    message.byUser ? "chat-bubble-primary" : "chat-bubble-secondary",
+                ]}
+            >
                 {@html marked.parse(message.text)}
             </div>
         </div>
     {/each}
     {#if waitingForModel}
         <div class="chat chat-start">
-            <div
-                class="chat-bubble whitespace-pre-line chat-bubble-secondary">
+            <div class="chat-bubble chat-bubble-secondary whitespace-pre-line">
                 <Loading message="" />
             </div>
         </div>
@@ -79,10 +90,17 @@
 
 <div class="contents">
     <form onsubmit={submitMessage} class="contents">
-        <div class="relative textarea textarea-bordered textarea-xs w-[40rem] min-h-0 flex items-center">
-            <div bind:this={editorElement} class="text-lg w-[40rem] max-h-48 overflow-scroll mr-10"></div>
-            <button type="submit"
-                    class="absolute right-3 border-solid border-2 border-primary rounded-full w-6 h-6 text-sm">🡲
+        <div
+            class="textarea textarea-bordered textarea-xs relative flex min-h-0 w-[40rem] items-center"
+        >
+            <div
+                bind:this={editorElement}
+                class="mr-10 max-h-48 w-[40rem] overflow-scroll text-lg"
+            ></div>
+            <button
+                type="submit"
+                class="border-primary absolute right-3 h-6 w-6 rounded-full border-2 border-solid text-sm"
+                >🡲
             </button>
         </div>
     </form>

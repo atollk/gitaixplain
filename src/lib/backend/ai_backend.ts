@@ -35,6 +35,11 @@ export abstract class AiChatInterface {
         systemMessage: string,
         chat: { text: string; byUser: boolean }[],
     ): Promise<string>
+
+    abstract providesEmbeddings(): boolean
+    abstract getEmbeddingProvider(): AiEmbeddingInterface
+
+    abstract reset(): void
 }
 
 export abstract class AiEmbeddingInterface {
@@ -43,11 +48,13 @@ export abstract class AiEmbeddingInterface {
     abstract getContext(query: string): Promise<string>
 
     abstract setDocuments(documents: DocumentInterface[]): Promise<void>
+
+    abstract reset(): void
 }
 
 export class AiInterface {
     constructor(
         readonly chatInterface: AiChatInterface,
-        readonly embeddingInterface: AiEmbeddingInterface
+        readonly embeddingInterface: AiEmbeddingInterface | null
     ) {}
 }

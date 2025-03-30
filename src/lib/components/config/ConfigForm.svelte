@@ -6,9 +6,12 @@
         embeddingProviderList,
         type EmbeddingProviderName,
     } from "$lib/models"
-    import { base } from "$app/paths"
     import { chatProviderNameToInterface } from "$lib/backend/langchain_chat_implementations"
-    import { type AiChatInterface, AiEmbeddingInterface } from "$lib/backend/ai_backend"
+    import {
+        type AiChatInterface,
+        AiEmbeddingInterface,
+        AiInterface,
+    } from "$lib/backend/ai_backend"
     import { embeddingProviderNameToInterface } from "$lib/backend/langchain_embedding_implementations"
     import ChatProviderConfig from "$lib/components/config/ChatProviderConfig.svelte"
     import EmbeddingProviderConfig from "$lib/components/config/EmbeddingProviderConfig.svelte"
@@ -17,13 +20,14 @@
     let chatProviderSelectElement: HTMLSelectElement | undefined = $state()
 
     let githubUrl = $state("")
-    let embeddingProviderName: EmbeddingProviderName | null = $state(null)
+    let embeddingProviderName: EmbeddingProviderName = $state(embeddingProviderList[0])
     let chatProvider: AiChatInterface = $state(getChatProvider())
     let embeddingProvider: AiEmbeddingInterface | null = $derived.by(() => {
         if (embeddingProviderName === null) return null
         const clas = embeddingProviderNameToInterface(embeddingProviderName)
         return new clas({})
     })
+    let useCustomEmbedding = $state(false)
 
     function getChatProvider(): AiChatInterface {
         const name = (chatProviderSelectElement?.value as ChatProviderName) ?? chatProviderList[0]
@@ -42,9 +46,17 @@
             return
         }
 
-        store.chatInterface = chatProvider
-        store.embeddingInterface = embeddingProvider! // TODO
         store.gitUrl = githubUrl
+        store.aiInterface = new AiInterface(
+            chatProvider,
+            useCustomEmbedding
+                ? embeddingProvider
+                : chatProvider.providesEmbeddings()
+                  ? chatProvider.getEmbeddingProvider()
+                  : null,
+        )
+        store.aiInterface.chatInterface.reset()
+        store.aiInterface.embeddingInterface.reset()
     }
 
     $inspect(chatProvider, embeddingProvider)
@@ -59,8 +71,6 @@
             required
         />
     </div>
-
-    <div class="divider">Model Provider</div>
 
     <div class="flex gap-4">
         <select
@@ -87,23 +97,48 @@
         </div>
 
         <div class="flex w-lg flex-col gap-2">
-            <ChatProviderConfig bind:chatProvider={chatProvider} />
+            <ChatProviderConfig bind:chatProvider />
         </div>
     </div>
 
     <details class="collapse-arrow bg-base-100 border-base-300 collapse border">
-        <summary class="collapse-title">Embedding Provider</summary>
+        <summary class="collapse-title">
+            Embedding Provider
+            {#if !chatProvider.providesEmbeddings() && !useCustomEmbedding}
+                <div class="badge badge-warning p-0">
+                    <img src="warning.svg" alt="Warning" class="w-4" />
+                </div>
+            {/if}
+        </summary>
         <div class="collapse-content">
-            <div class="flex gap-4">
-                <select bind:value={embeddingProviderName} class="select select-bordered w-40">
-                    <option value={null}>(same as model provider)</option>
-                    {#each embeddingProviderList as provider}
-                        <option value={provider}>{provider}</option>
-                    {/each}
-                </select>
-
-                <EmbeddingProviderConfig {embeddingProvider} {chatProvider} />
+            <div class="mb-4 flex gap-4">
+                <input
+                    type="checkbox"
+                    bind:checked={useCustomEmbedding}
+                    class="checkbox checkbox-secondary"
+                />
+                <p>Use a different embedding provider</p>
             </div>
+
+            {#if useCustomEmbedding}
+                <div class="flex gap-4">
+                    <select bind:value={embeddingProviderName} class="select select-bordered w-40">
+                        {#each embeddingProviderList as provider}
+                            <option value={provider}>{provider}</option>
+                        {/each}
+                    </select>
+
+                    <EmbeddingProviderConfig {embeddingProvider} {chatProvider} />
+                </div>
+            {:else if !chatProvider.providesEmbeddings()}
+                <div class="alert alert-warning">
+                    <img src="warning.svg" alt="Warning" />
+                    <span>
+                        The selected model provider does not support embeddings. Certain features
+                        will be unavailable or of reduced quality.
+                    </span>
+                </div>
+            {/if}
         </div>
     </details>
 

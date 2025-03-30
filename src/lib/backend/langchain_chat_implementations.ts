@@ -2,10 +2,14 @@ import { ChatGoogleGenerativeAI } from "@langchain/google-genai"
 import { ChatGroq } from "@langchain/groq"
 import { LangchainChatInterface } from "$lib/backend/langchain_backend"
 import { ChatOllama } from "@langchain/ollama"
-import type { ChatProviderName, EmbeddingProviderName } from "$lib/models"
+import type { ChatProviderName } from "$lib/models"
 import { ChatAnthropic } from "@langchain/anthropic"
 import { type AiChatInterface, AiEmbeddingInterface } from "$lib/backend/ai_backend"
 import { convertToConfig } from "$lib/backend/util.svelte"
+import {
+    GeminiEmbeddingInterface,
+    OllamaEmbeddingInterface,
+} from "$lib/backend/langchain_embedding_implementations"
 
 export function chatProviderNameToInterface(name: ChatProviderName): {
     new (config: Record<string, unknown>): AiChatInterface
@@ -66,6 +70,14 @@ export class GeminiChatInterface extends LangchainChatInterface<GeminiChatInterf
     getContextWindowSize(): number {
         return this.modelInfo.contextSize
     }
+
+    providesEmbeddings(): boolean {
+        return true
+    }
+
+    getEmbeddingProvider(): AiEmbeddingInterface {
+        return new GeminiEmbeddingInterface({ apiKey: this.config.apiKey })
+    }
 }
 
 export type GroqChatInterfaceConfig = { apiKey: string; modelName: string }
@@ -113,6 +125,14 @@ export class GroqChatInterface extends LangchainChatInterface<GroqChatInterfaceC
     getContextWindowSize(): number {
         return this.modelInfo.contextSize
     }
+
+    providesEmbeddings(): boolean {
+        return false
+    }
+
+    getEmbeddingProvider(): AiEmbeddingInterface {
+        throw new Error("Cannot create embedding interface from Groq.")
+    }
 }
 
 export type AnthropicChatInterfaceConfig = { apiKey: string; modelName: string }
@@ -157,6 +177,14 @@ export class AnthropicChatInterface extends LangchainChatInterface<AnthropicChat
     getContextWindowSize(): number {
         return this.modelInfo.contextSize
     }
+
+    providesEmbeddings(): boolean {
+        return false
+    }
+
+    getEmbeddingProvider(): AiEmbeddingInterface {
+        throw new Error("Cannot create embedding interface from Anthropic.")
+    }
 }
 
 export type OllamaChatInterfaceConfig = { contextWindowSize: number }
@@ -194,5 +222,13 @@ export class OllamaChatInterface extends LangchainChatInterface<OllamaChatInterf
 
     getContextWindowSize(): number {
         return this.config.contextWindowSize
+    }
+
+    providesEmbeddings(): boolean {
+        return true
+    }
+
+    getEmbeddingProvider(): AiEmbeddingInterface {
+        return new OllamaEmbeddingInterface({})
     }
 }

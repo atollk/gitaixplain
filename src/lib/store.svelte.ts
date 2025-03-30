@@ -1,8 +1,7 @@
-import { type AiChatInterface, AiEmbeddingInterface } from "$lib/backend/ai_backend"
+import { type AiInterface } from "$lib/backend/ai_backend"
 
 export interface StoreData {
-    chatInterface?: AiChatInterface
-    embeddingInterface?: AiEmbeddingInterface
+    aiInterface?: AiInterface
     gitUrl?: string
 }
 

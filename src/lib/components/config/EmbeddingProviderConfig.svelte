@@ -1,6 +1,11 @@
 <script lang="ts">
     import { AiChatInterface, AiEmbeddingInterface } from "$lib/backend/ai_backend"
-    import { GeminiEmbeddingInterface } from "$lib/backend/langchain_embedding_implementations"
+    import {
+        GeminiEmbeddingInterface,
+        LocalEmbeddingInterface,
+        OllamaEmbeddingInterface,
+        VoyageEmbeddingInterface,
+    } from "$lib/backend/langchain_embedding_implementations"
 
     let { embeddingProvider, chatProvider } = $props<{
         embeddingProvider: AiEmbeddingInterface | null
@@ -42,6 +47,26 @@
                     <input type="text" class="grow" bind:value={embeddingProvider.config.apiKey} />
                 </label>
             </div>
+        </div>
+    {:else if embeddingProvider instanceof VoyageEmbeddingInterface}
+        <div class="flex flex-col gap-2">
+            <div class="flex items-center">
+                <label
+                    class="input input-bordered flex cursor-default items-center gap-2 select-none"
+                >
+                    API Key:
+                    <input type="text" class="grow" bind:value={embeddingProvider.config.apiKey} />
+                </label>
+            </div>
+        </div>
+    {:else if embeddingProvider instanceof OllamaEmbeddingInterface}
+        <div></div>
+    {:else if embeddingProvider instanceof LocalEmbeddingInterface}
+        <div class="alert info">
+            <span>
+                This will compute embeddings locally in your browser using CPU. Depending on your
+                hardware and the repository, this can cause huge delays.
+            </span>
         </div>
     {:else}
         Error. Unknown provider {embeddingProvider?.name}

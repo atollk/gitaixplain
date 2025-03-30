@@ -41,6 +41,10 @@ export abstract class LangchainChatInterface<
         const response = await this.model!.invoke(messages)
         return response.content as string
     }
+
+    reset(): void {
+        this.model = undefined
+    }
 }
 
 export abstract class LangchainEmbeddingInterface<
@@ -82,5 +86,10 @@ export abstract class LangchainEmbeddingInterface<
         } else {
             throw Error("Vector store already initialized.")
         }
+    }
+
+    reset(): void {
+        this.embeddings = undefined
+        this.vectorStore = undefined
     }
 }

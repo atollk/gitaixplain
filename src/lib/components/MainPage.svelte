@@ -5,19 +5,11 @@
     import { fetchRepoSummary } from "$lib/backend/repository_dump"
     import Footer from "$lib/components/Footer.svelte"
     import { store } from "$lib/store.svelte"
-    import { AiInterface } from "$lib/backend/ai_backend"
     import ConfigForm from "$lib/components/config/ConfigForm.svelte"
 
     let repoSummary = $derived.by(() => {
         if (store.gitUrl) {
             return fetchRepoSummary(store.gitUrl)
-        } else {
-            return null
-        }
-    })
-    let aiInterface = $derived.by(() => {
-        if (store.chatInterface && store.embeddingInterface) {
-            return new AiInterface(store.chatInterface, store.embeddingInterface)
         } else {
             return null
         }
@@ -30,13 +22,13 @@
 
     <div class="divider my-8"></div>
 
-    {#if store.gitUrl === undefined || repoSummary === null || aiInterface === null}
-        TODO
+    {#if store.gitUrl === undefined || repoSummary === null || store.aiInterface === undefined}
+        <div></div>
     {:else}
         {#await repoSummary}
             <Loading message="Loading your repository" />
         {:then repoSummary}
-            <LangchainExplain repoLink={store.gitUrl} interface={aiInterface} {repoSummary} />
+            <LangchainExplain repoLink={store.gitUrl} interface={store.aiInterface} {repoSummary} />
         {/await}
     {/if}
 </main>

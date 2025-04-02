@@ -3,6 +3,7 @@ import { AiChatInterface, AiInterface, type AiRepoSummary } from "$lib/backend/a
 import { approximateTokens, countTokens, stripBackticks } from "$lib/backend/util"
 import type { DocumentInterface } from "@langchain/core/documents"
 import { CharacterTextSplitter } from "@langchain/textsplitters"
+import { z } from "zod"
 
 const MESSAGE_SUMMARIZE_PARTS = `
 You will be provided with an XML file describing parts of a Git repository. 
@@ -29,19 +30,18 @@ The XML will contain three types of tags:
 - The "file" tag will have an attribute for that file's path and contain the file's contents.
 - The "summary" tag will have an attribute for a file's or directory's path and contain the summary for that part created previously by you.
 
-The output must strictly follow this schema:
-
 {
   "summary": {
     "purpose": "Single paragraph describing the project's core purpose",
   },
   "componentAnalysis": {
-    "flowGraph": {  // A graph describing components and their interactions.
-        "nodes": ["Node Name1", "Node Name2", ...],
+    "flowGraph": {  
+        // A "component analysis", which relates the different components used in this project in a flow graph, displaying their relation and functionality together. A component could be a class, a function, an abstract concept, or something else.
+        "nodes": ["Component Name1", "Component Name2", ...],
         "edges": [
           {
-            "from": "string",  // node name
-            "to": "string",    // node name
+            "from": "string",  // component name
+            "to": "string",    // component name
             "label": "string", // optional
           }
         ]
@@ -67,6 +67,43 @@ Ground rules:
 2. Include only information that can be confidently inferred from the repository
 3. In keyFiles, prioritize files that are essential for understanding the system architecture
 `
+
+const STRUCTURE_ANALYZE_ENTIRE_REPO = z.object({
+    summary: z.object({
+        purpose: z.string().describe("Single paragraph describing the project's core purpose"),
+    }),
+    componentAnalysis: z.object({
+        flowGraph: z
+            .object({
+                nodes: z.array(z.string().describe("Name of a single component. A component could be a class, a function, an abstract concept, or something else.")),
+                edges: z.array(
+                    z.object({
+                        from: z.string().describe("Component name with the outgoing connection"),
+                        to: z.string().describe("Component name with the incoming connection"),
+                        label: z.string().optional(),
+                    }),
+                ),
+            })
+            .describe("A \"component analysis\", which relates the different components used in this project in a flow graph, displaying their relation and functionality together."),
+    }),
+    keyFiles: z.array(
+        z.object({
+            path: z.string().describe("File path"),
+            purpose: z.string().describe("Brief description of file's role"),
+            importance: z
+                .string()
+                .describe("Why this file is important to the repositories purpose."),
+            connections: z.array(z.string()).describe("Related files"),
+        }),
+    ),
+    usagePaths: z.object({
+        setup: z.array(z.string()).describe("Step-by-step setup instructions"),
+        mainFlow: z.string().describe("Description of primary data/control flow through system"),
+    }),
+    dependencies: z
+        .array(z.string())
+        .describe("List of important dependencies frameworks / libraries"),
+})
 
 async function summarizePart(
     chatAi: AiChatInterface,
@@ -215,18 +252,34 @@ export async function analyzeRepo(
     )
 
     // TODO: summarize top levels between each other
-
-    let responseContent = await aiInterface.chatInterface.getChatResponse(
-        MESSAGE_ANALYZE_ENTIRE_REPO,
-        [
-            {
-                text: mergedTopLevels.map(({ xml }) => xml).join("\n"),
-                byUser: true,
-            },
-        ],
-    )
-
-    responseContent = stripBackticks(responseContent, "json")
-    console.log("responseContent", responseContent)
-    return JSON.parse(responseContent)
+    
+    const useWithStructure = false
+    
+    if (useWithStructure) {
+        const responseContent = await aiInterface.chatInterface.getChatResponseWithStructure(
+            MESSAGE_ANALYZE_ENTIRE_REPO,
+            [
+                {
+                    text: mergedTopLevels.map(({ xml }) => xml).join("\n"),
+                    byUser: true,
+                },
+            ],
+            STRUCTURE_ANALYZE_ENTIRE_REPO,
+        )
+        console.log("responseContent", responseContent)
+        return responseContent
+    } else {
+        let responseContent = await aiInterface.chatInterface.getChatResponse(
+            MESSAGE_ANALYZE_ENTIRE_REPO,
+            [
+                {
+                    text: mergedTopLevels.map(({ xml }) => xml).join("\n"),
+                    byUser: true,
+                },
+            ],
+        )
+        responseContent = stripBackticks(responseContent, "json")
+        console.log("responseContent", responseContent)
+        return JSON.parse(responseContent)
+    }
 }

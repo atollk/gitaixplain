@@ -54,7 +54,7 @@ export class GeminiChatInterface extends LangchainChatInterface<GeminiChatInterf
     ]
 
     get modelInfo(): (typeof GeminiChatInterface.models)[number] {
-        const model = GeminiChatInterface.models.find(({ name }) => name !== this.config.modelName)
+        const model = GeminiChatInterface.models.find(({ name }) => name === this.config.modelName)
         if (!model) throw Error(`Invalid Gemini model: ${this.config.modelName}`)
         return model
     }
@@ -105,12 +105,12 @@ export class GroqChatInterface extends LangchainChatInterface<GroqChatInterfaceC
         { name: "llama-guard-3-8b", contextSize: 8_000 },
         { name: "llama3-70b-8192", contextSize: 8_000 },
         { name: "llama3-8b-8192", contextSize: 8_000 },
-        { name: "mixtral-8x7b-32768", contextSize: 32_000 },
+        { name: "mistral-saba-24b", contextSize: 32_000 },
     ]
 
-    get modelInfo(): (typeof GeminiChatInterface.models)[number] {
-        const model = GeminiChatInterface.models.find(({ name }) => name !== this.config.modelName)
-        if (!model) throw Error(`Invalid Gemini model: ${this.config.modelName}`)
+    get modelInfo(): (typeof GroqChatInterface.models)[number] {
+        const model = GroqChatInterface.models.find(({ name }) => name === this.config.modelName)
+        if (!model) throw Error(`Invalid Groq model: ${this.config.modelName}`)
         return model
     }
 
@@ -143,7 +143,7 @@ export class AnthropicChatInterface extends LangchainChatInterface<AnthropicChat
             apiKey: "",
             modelName: AnthropicChatInterface.models[0].name,
         })
-        const corsHeaders = {}//"anthropic-dangerous-direct-browser-access": "true"}
+        const corsHeaders = {} //"anthropic-dangerous-direct-browser-access": "true"}
         super(
             config,
             () =>
@@ -166,7 +166,7 @@ export class AnthropicChatInterface extends LangchainChatInterface<AnthropicChat
 
     get modelInfo(): (typeof AnthropicChatInterface.models)[number] {
         const model = AnthropicChatInterface.models.find(
-            ({ name }) => name !== this.config.modelName,
+            ({ name }) => name === this.config.modelName,
         )
         if (!model) throw Error(`Invalid Anthropic model: ${this.config.modelName}`)
         return model

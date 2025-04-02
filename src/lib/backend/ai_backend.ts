@@ -1,5 +1,6 @@
 import type { ChatProviderName, EmbeddingProviderName } from "$lib/models"
 import type { DocumentInterface } from "@langchain/core/documents"
+import {z} from "zod"
 
 export interface Graph {
     nodes: string[]
@@ -36,6 +37,12 @@ export abstract class AiChatInterface {
         systemMessage: string,
         chat: { text: string; byUser: boolean }[],
     ): Promise<string>
+
+    abstract getChatResponseWithStructure<T extends z.ZodObject<U>, U extends z.ZodRawShape>(
+        systemMessage: string,
+        chat: { text: string; byUser: boolean }[],
+        structure: T,
+    ): Promise<z.infer<T>>
 
     abstract providesEmbeddings(): boolean
     abstract getEmbeddingProvider(): AiEmbeddingInterface

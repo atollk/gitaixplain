@@ -95,7 +95,7 @@
             <h6 class="h6">Chat about the repository</h6>
         </div>
 
-        <LangchainChat model={props.interface} />
+        <LangchainChat aiInterface={props.interface} />
     </div>
 {:catch error}
     <div role="alert" class="alert alert-error block">
@@ -111,5 +111,5 @@
         <h6 class="h6">Chat about the repository</h6>
     </div>
 
-    <LangchainChat model={props.interface} />
+    <LangchainChat aiInterface={props.interface} />
 {/await}

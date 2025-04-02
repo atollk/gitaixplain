@@ -28,6 +28,7 @@ export interface AiRepoSummary {
 
 export abstract class AiChatInterface {
     abstract get name(): ChatProviderName
+    abstract get config(): Record<string, unknown>
 
     abstract getContextWindowSize(): number
 
@@ -44,6 +45,7 @@ export abstract class AiChatInterface {
 
 export abstract class AiEmbeddingInterface {
     abstract get name(): EmbeddingProviderName
+    abstract get config(): Record<string, unknown>
 
     abstract getContext(query: string): Promise<string>
 
@@ -57,4 +59,10 @@ export class AiInterface {
         readonly chatInterface: AiChatInterface,
         readonly embeddingInterface: AiEmbeddingInterface | null,
     ) {}
+
+    fillImplicitly(): AiInterface {
+        if (this.embeddingInterface !== null || !this.chatInterface.providesEmbeddings())
+            return this
+        else return new AiInterface(this.chatInterface, this.chatInterface.getEmbeddingProvider())
+    }
 }

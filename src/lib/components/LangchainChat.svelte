@@ -8,7 +8,7 @@
     import { marked } from "marked"
     import Loading from "$lib/components/util/Loading.svelte"
 
-    const props: { model: AiInterface } = $props()
+    const props: { aiInterface: AiInterface } = $props()
 
     const messages: { text: string; byUser: boolean }[] = $state([])
     let waitingForModel = $state(false)
@@ -26,9 +26,12 @@
 
         waitingForModel = true
         try {
-            const context = await props.model.embeddingInterface?.getContext(userMessage)
+            const context = await props.aiInterface.embeddingInterface?.getContext(userMessage)
             const systemPrompt = `${SYSTEM_PROMPT}\n\n${context}`
-            const response = await props.model.chatInterface.getChatResponse(systemPrompt, messages)
+            const response = await props.aiInterface.chatInterface.getChatResponse(
+                systemPrompt,
+                messages,
+            )
             messages.push({ text: response, byUser: false })
         } finally {
             waitingForModel = false

@@ -11,6 +11,7 @@ function state<T>(value: T): T {
 }
 
 export class AppStore {
+
     constructor() {
         const providerConfig = localStorage.getItem(PROVIDER_CONFIG_KEY)
         if (providerConfig) {
@@ -21,9 +22,9 @@ export class AppStore {
 
     private data: {
         aiInterface?: AiInterface,
-        gitUrl?: string,
+        gitUrl: string,
         useLocalStorage: boolean
-    } = $state({useLocalStorage: false})
+    } = $state({useLocalStorage: false, gitUrl: ""})
 
     get aiInterface(): AiInterface | undefined {
         return this.data.aiInterface
@@ -38,11 +39,11 @@ export class AppStore {
         }
     }
 
-    get gitUrl(): string | undefined {
+    get gitUrl(): string {
         return this.data.gitUrl
     }
 
-    set gitUrl(value: string | undefined) {
+    set gitUrl(value: string) {
         this.data.gitUrl = state(value)
     }
 

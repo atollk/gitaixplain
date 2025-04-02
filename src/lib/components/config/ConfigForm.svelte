@@ -4,6 +4,7 @@
 
     let githubUrl = $state("")
     let configModal: ConfigModal | undefined = $state()
+    let modalResetKey = $state({})
 
     async function handleSubmit(e: SubmitEvent): Promise<void> {
         e.preventDefault()
@@ -37,4 +38,6 @@
     </div>
 </form>
 
-<ConfigModal bind:this={configModal} />
+{#key modalResetKey}
+    <ConfigModal bind:this={configModal} onclose={() => modalResetKey = {}} />
+{/key}

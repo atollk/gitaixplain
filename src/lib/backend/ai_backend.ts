@@ -59,4 +59,10 @@ export class AiInterface {
         readonly chatInterface: AiChatInterface,
         readonly embeddingInterface: AiEmbeddingInterface | null,
     ) {}
+
+    fillImplicitly(): AiInterface {
+        if (this.embeddingInterface !== null || !this.chatInterface.providesEmbeddings())
+            return this
+        else return new AiInterface(this.chatInterface, this.chatInterface.getEmbeddingProvider())
+    }
 }

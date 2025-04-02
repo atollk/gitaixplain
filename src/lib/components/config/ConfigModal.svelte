@@ -16,6 +16,8 @@
     import EmbeddingProviderConfig from "$lib/components/config/EmbeddingProviderConfig.svelte"
     import { appStore } from "$lib/store.svelte"
 
+    let { onclose = () => {} } = $props<{ onclose?: () => void }>()
+
     export function showModal() {
         dialogElement?.showModal()
     }
@@ -31,7 +33,7 @@
         appStore.aiInterface?.embeddingInterface ?? getEmbeddingProvider(),
     )
 
-    let useCustomEmbedding = $state(false)
+    let useCustomEmbedding = $state(embeddingProvider !== null)
     let saveSettings = $state(appStore.useLocalStorage)
 
     function getChatProvider(): AiChatInterface {
@@ -39,34 +41,34 @@
         const clas = chatProviderNameToInterface(name)
         return new clas({})
     }
+
     function getEmbeddingProvider(): AiEmbeddingInterface | null {
-        const name =
-            (embeddingProviderSelectElement?.value as EmbeddingProviderName) ??
-            embeddingProviderList[0]
-        const clas = embeddingProviderNameToInterface(name)
-        return new clas({})
+        if (embeddingProviderSelectElement === undefined) {
+            return null
+        } else {
+            const name = embeddingProviderSelectElement.value as EmbeddingProviderName
+            const clas = embeddingProviderNameToInterface(name)
+            return new clas({})
+        }
     }
 
     async function handleSubmit(): Promise<void> {
         appStore.useLocalStorage = saveSettings
         appStore.aiInterface = new AiInterface(
             chatProvider,
-            useCustomEmbedding
-                ? embeddingProvider
-                : chatProvider.providesEmbeddings()
-                  ? chatProvider.getEmbeddingProvider()
-                  : null,
+            useCustomEmbedding ? embeddingProvider : null,
         )
         appStore.aiInterface.chatInterface.reset()
         appStore.aiInterface.embeddingInterface?.reset()
     }
 </script>
 
-<dialog bind:this={dialogElement} class="modal">
+<dialog bind:this={dialogElement} class="modal" {onclose}>
     <div class="modal-box">
         <form method="dialog" onsubmit={handleSubmit} class="flex flex-col gap-6">
             <div class="divider">Chat Model</div>
 
+            <!-- Chat Model -->
             <div class="flex gap-4">
                 <select
                     bind:this={chatProviderSelectElement}
@@ -98,6 +100,7 @@
 
             <div class="divider">Embedding Model</div>
 
+            <!-- Embedding Model -->
             <div>
                 <div class="mb-4 flex gap-4">
                     <input
@@ -137,6 +140,7 @@
 
             <div class="divider"></div>
 
+            <!-- Other settings -->
             <div class="mb-4 flex gap-4">
                 <input
                     type="checkbox"

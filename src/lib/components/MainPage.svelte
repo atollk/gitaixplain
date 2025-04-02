@@ -6,6 +6,11 @@
     import Footer from "$lib/components/Footer.svelte"
     import ConfigForm from "$lib/components/config/ConfigForm.svelte"
     import { appStore } from "$lib/store.svelte"
+    import { page } from "$app/state"
+
+    const gitUrl = page.url.searchParams.get("git")
+    if (gitUrl)
+        appStore.gitUrl = gitUrl
 
     let repoSummary = $derived.by(() => {
         if (appStore.gitUrl) {
@@ -28,7 +33,11 @@
         {#await repoSummary}
             <Loading message="Loading your repository" />
         {:then repoSummary}
-            <LangchainExplain repoLink={appStore.gitUrl} interface={appStore.aiInterface} {repoSummary} />
+            <LangchainExplain
+                repoLink={appStore.gitUrl}
+                interface={appStore.aiInterface.fillImplicitly()}
+                {repoSummary}
+            />
         {/await}
     {/if}
 </main>

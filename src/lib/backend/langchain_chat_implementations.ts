@@ -143,12 +143,16 @@ export class AnthropicChatInterface extends LangchainChatInterface<AnthropicChat
             apiKey: "",
             modelName: AnthropicChatInterface.models[0].name,
         })
+        const corsHeaders = {}//"anthropic-dangerous-direct-browser-access": "true"}
         super(
             config,
             () =>
                 new ChatAnthropic({
                     model: config.modelName,
                     apiKey: config.apiKey,
+                    clientOptions: {
+                        defaultHeaders: corsHeaders,
+                    },
                 }),
         )
     }
@@ -160,9 +164,11 @@ export class AnthropicChatInterface extends LangchainChatInterface<AnthropicChat
         { name: "claude-3-haiku-20240307", contextSize: 200_000 },
     ]
 
-    get modelInfo(): (typeof GeminiChatInterface.models)[number] {
-        const model = GeminiChatInterface.models.find(({ name }) => name !== this.config.modelName)
-        if (!model) throw Error(`Invalid Gemini model: ${this.config.modelName}`)
+    get modelInfo(): (typeof AnthropicChatInterface.models)[number] {
+        const model = AnthropicChatInterface.models.find(
+            ({ name }) => name !== this.config.modelName,
+        )
+        if (!model) throw Error(`Invalid Anthropic model: ${this.config.modelName}`)
         return model
     }
 

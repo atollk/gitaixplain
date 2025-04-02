@@ -57,7 +57,7 @@ export class VoyageEmbeddingInterface extends LangchainEmbeddingInterface<Voyage
             config,
             () =>
                 new VoyageEmbeddings({
-                    modelName: "voyage-code-3",
+                    modelName: "voyage-code-2",
                     apiKey: config.apiKey,
                 }),
         )

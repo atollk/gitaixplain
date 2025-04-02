@@ -210,7 +210,7 @@ export async function analyzeRepo(
 
     const mergedTopLevels = Object.values(mergedTopLevelsTree.metaInfo).map((x) => x[0])
 
-    await aiInterface.embeddingInterface.setDocuments(
+    await aiInterface.embeddingInterface?.setDocuments(
         await extractVectorDocuments(repositoryDump, mergedTopLevels, maxTokens),
     )
 

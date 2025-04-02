@@ -78,7 +78,7 @@
                     class="select select-bordered w-40"
                 >
                     {#each chatProviderList as provider}
-                        <option value={provider}>{provider}</option>
+                        <option value={provider} selected={provider === chatProvider.name}>{provider}</option>
                     {/each}
                 </select>
 
@@ -121,7 +121,7 @@
                             class="select select-bordered w-40"
                         >
                             {#each embeddingProviderList as provider}
-                                <option value={provider}>{provider}</option>
+                                <option value={provider}  selected={provider === embeddingProvider?.name}>{provider}</option>
                             {/each}
                         </select>
 

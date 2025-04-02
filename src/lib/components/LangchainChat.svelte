@@ -28,7 +28,10 @@
         try {
             const context = await props.aiInterface.embeddingInterface?.getContext(userMessage)
             const systemPrompt = `${SYSTEM_PROMPT}\n\n${context}`
-            const response = await props.aiInterface.chatInterface.getChatResponse(systemPrompt, messages)
+            const response = await props.aiInterface.chatInterface.getChatResponse(
+                systemPrompt,
+                messages,
+            )
             messages.push({ text: response, byUser: false })
         } finally {
             waitingForModel = false

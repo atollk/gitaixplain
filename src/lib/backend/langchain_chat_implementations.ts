@@ -48,9 +48,10 @@ export class GeminiChatInterface extends LangchainChatInterface<GeminiChatInterf
 
     static models = [
         { name: "gemini-1.5-flash", contextSize: 1_000_000 },
-        { name: "gemini-1.5-pro", contextSize: 2_000_000 },
+        { name: "gemini-1.5-pro", contextSize: 1_000_000 },
         { name: "gemini-1.5-flash-8b", contextSize: 1_000_000 },
         { name: "gemini-2.0-flash", contextSize: 1_000_000 },
+        { name: "gemini-2.5-pro-exp-03-25", contextSize: 1_000_000 },
     ]
 
     get modelInfo(): (typeof GeminiChatInterface.models)[number] {

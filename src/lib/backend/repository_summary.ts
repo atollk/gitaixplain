@@ -4,6 +4,8 @@ import { approximateTokens, countTokens, stripBackticks } from "$lib/backend/uti
 import type { DocumentInterface } from "@langchain/core/documents"
 import { CharacterTextSplitter } from "@langchain/textsplitters"
 import { z } from "zod"
+import { JsonOutputParser } from "@langchain/core/output_parsers"
+import { zodToJsonSchema } from "zod-to-json-schema"
 
 const MESSAGE_SUMMARIZE_PARTS = `
 You will be provided with an XML file describing parts of a Git repository. 
@@ -20,52 +22,6 @@ The XML will contain three types of tags:
 - The "summary" tag will have an attribute for a file's or directory's path and contain the summary for that part created previously by you.
 
 Provide your output in a formal and factual tone in form of a document to be read.
-`
-
-const MESSAGE_ANALYZE_ENTIRE_REPO = `
-Analyze the following Git repository XML data and generate a structured analysis in JSON format. 
-
-The XML will contain three types of tags:
-- The "paths" tag will contain a list of all filenames in the Git repository.
-- The "file" tag will have an attribute for that file's path and contain the file's contents.
-- The "summary" tag will have an attribute for a file's or directory's path and contain the summary for that part created previously by you.
-
-{
-  "summary": {
-    "purpose": "Single paragraph describing the project's core purpose",
-  },
-  "componentAnalysis": {
-    "flowGraph": {  
-        // A "component analysis", which relates the different components used in this project in a flow graph, displaying their relation and functionality together. A component could be a class, a function, an abstract concept, or something else.
-        "nodes": ["Component Name1", "Component Name2", ...],
-        "edges": [
-          {
-            "from": "string",  // component name
-            "to": "string",    // component name
-            "label": "string", // optional
-          }
-        ]
-    },
-  },
-  "keyFiles": [
-    {
-      "path": "File path",
-      "purpose": "Brief description of file's role",
-      "importance": "Why this file is critical",
-      "connections": ["Related files"]
-    }
-  ],
-  "usagePaths": {
-    "setup": ["Step-by-step setup instructions"],
-    "mainFlow": "Description of primary data/control flow through system",
-  },
-  "dependencies": ["List of important dependencies frameworks / libraries"]
-}
-
-Ground rules:
-1. Keep all text fields concise and information-dense
-2. Include only information that can be confidently inferred from the repository
-3. In keyFiles, prioritize files that are essential for understanding the system architecture
 `
 
 const STRUCTURE_ANALYZE_ENTIRE_REPO = z.object({
@@ -104,6 +60,25 @@ const STRUCTURE_ANALYZE_ENTIRE_REPO = z.object({
         .array(z.string())
         .describe("List of important dependencies frameworks / libraries"),
 })
+
+const MESSAGE_ANALYZE_ENTIRE_REPO = `
+Analyze the following Git repository XML data and generate a structured analysis in JSON format. 
+
+The XML will contain three types of tags:
+- The "paths" tag will contain a list of all filenames in the Git repository.
+- The "file" tag will have an attribute for that file's path and contain the file's contents.
+- The "summary" tag will have an attribute for a file's or directory's path and contain the summary for that part created previously by you.
+
+The output must adhere to the following schema:
+
+${JSON.stringify(zodToJsonSchema(STRUCTURE_ANALYZE_ENTIRE_REPO))}
+
+Ground rules:
+1. Keep all text fields concise and information-dense
+2. Include only information that can be confidently inferred from the repository
+3. In keyFiles, prioritize files that are essential for understanding the system architecture
+`
+
 
 async function summarizePart(
     chatAi: AiChatInterface,
@@ -269,7 +244,7 @@ export async function analyzeRepo(
         console.log("responseContent", responseContent)
         return responseContent
     } else {
-        let responseContent = await aiInterface.chatInterface.getChatResponse(
+        const responseContent = await aiInterface.chatInterface.getChatResponse(
             MESSAGE_ANALYZE_ENTIRE_REPO,
             [
                 {
@@ -278,8 +253,9 @@ export async function analyzeRepo(
                 },
             ],
         )
-        responseContent = stripBackticks(responseContent, "json")
-        console.log("responseContent", responseContent)
-        return JSON.parse(responseContent)
+        const parser = new JsonOutputParser<AiRepoSummary>()
+        const response = await parser.parse(responseContent)
+        console.log("responseContent", response)
+        return response
     }
 }

@@ -147,6 +147,11 @@ function fileIsBinary(content: Uint8Array): boolean {
     return false
 }
 
+const fileIgnorePattern = /(.*\.lock)|(package-lock\.json)/
+function fileIsIgnored(filename: string): boolean {
+    return fileIgnorePattern.test(filename)
+}
+
 async function fetchIsomorphicDump(url: string): Promise<RepositoryDump> {
     // Initialize and fetch git repository.
     // @ts-expect-error LightningFS.Options.db is incorrectly required
@@ -171,10 +176,12 @@ async function fetchIsomorphicDump(url: string): Promise<RepositoryDump> {
             const rawContent = await workdirEntry?.content()
             let content = null
             if (rawContent !== undefined && typeof rawContent === "object") {
-                if (!fileIsBinary(rawContent)) {
-                    content = textDecoder.decode(rawContent)
+                if (fileIsBinary(rawContent)) {
+                    console.log(`skipping binary file ${filename}`)
+                } else if (fileIsIgnored(filename)) {
+                    console.log(`skipping ignored file ${filename}`)
                 } else {
-                    console.log(`skipping ${filename}`)
+                    content = textDecoder.decode(rawContent)
                 }
             }
             return { filename, content }
@@ -194,6 +201,5 @@ async function fetchIsomorphicDump(url: string): Promise<RepositoryDump> {
 }
 
 export async function fetchRepoSummary(url: string): Promise<RepositoryDump> {
-    // return Promise.resolve(new DOMParser().parseFromString("<foo></foo>", "application/xml"))
     return await fetchIsomorphicDump(url)
 }

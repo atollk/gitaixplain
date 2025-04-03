@@ -92,7 +92,7 @@ export abstract class LangchainEmbeddingInterface<
         super()
     }
 
-    async getContext(query: string): Promise<string> {
+    async getContext(query: string, maxK: number): Promise<string[]> {
         if (this.embeddings === undefined || this.vectorStore === undefined) {
             throw Error("Cannot getContext from an unitialized Embedding object.")
         }
@@ -104,12 +104,19 @@ export abstract class LangchainEmbeddingInterface<
             this.vectorStoreLength,
         )
         documents.sort((lhs, rhs) => rhs[1] - lhs[1])
-        const bestDocument = documents[0][0]
-        return bestDocument.pageContent
+        const bestDocuments: Map<string, string> = new Map()
+        for (const doc of documents) {
+            if (bestDocuments.size >= maxK)
+                break
+            const metadata: {path: string, fullContent: string} = doc[0].metadata
+            bestDocuments.set(metadata.path, metadata.fullContent)
+        }
+        return bestDocuments.values().toArray()
     }
 
     async setDocuments(documents: DocumentInterface[]): Promise<void> {
         if (this.embeddings === undefined || this.vectorStore === undefined) {
+            console.log("setDocuments", documents)
             this.embeddings = this.modelGen()
             this.vectorStore = new MemoryVectorStore(this.embeddings)
             await this.vectorStore.addDocuments(documents)

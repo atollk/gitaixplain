@@ -26,47 +26,64 @@ Provide your output in a formal and factual tone in form of a document to be rea
 
 const STRUCTURE_ANALYZE_ENTIRE_REPO = z.object({
     summary: z.object({
-        purpose: z.string().describe("Single paragraph describing the project's core purpose"),
+        purpose: z.string().describe("The project's core purpose and design"),
+        mainFlow: z.string().describe("Description of primary data/control flow through system"),
     }),
-    componentAnalysis: z.object({
-        flowGraph: z
-            .object({
-                nodes: z.array(
+    componentFlowGraph: z
+        .object({
+            nodes: z
+                .array(
                     z
                         .string()
                         .describe(
                             "Name of a single component. A component could be a class, a function, an abstract concept, or something else.",
                         ),
-                ),
-                edges: z.array(
-                    z.object({
-                        from: z.string().describe("Component name with the outgoing connection"),
-                        to: z.string().describe("Component name with the incoming connection"),
-                        label: z.string().optional(),
-                    }),
-                ),
-            })
-            .describe(
-                'A "component analysis", which relates the different components used in this project in a flow graph, displaying their relation and functionality together.',
+                )
+                .max(20),
+            edges: z.array(
+                z.object({
+                    from: z.string().describe("Component name with the outgoing connection"),
+                    to: z.string().describe("Component name with the incoming connection"),
+                    label: z.string().optional(),
+                }),
             ),
-    }),
+        })
+        .describe(
+            'A "component analysis", which relates the different components used in this project in a flow graph, displaying their relation and functionality together.',
+        ),
     keyFiles: z.array(
         z.object({
             path: z.string().describe("File path"),
-            purpose: z.string().describe("Brief description of file's role"),
-            importance: z
+            purpose: z
                 .string()
-                .describe("Why this file is important to the repositories purpose."),
-            connections: z.array(z.string()).describe("Related files"),
+                .describe(
+                    "Brief description of file's role and why it is important to the repositories purpose",
+                ),
+            importance: z
+                .number()
+                .min(1)
+                .max(10)
+                .describe(
+                    "From 1 to 10, how crucial this file is for understanding the repository purpose",
+                ),
+            connections: z
+                .array(z.string())
+                .describe("Other files in the repository related to this one"),
         }),
     ),
-    usagePaths: z.object({
-        setup: z.array(z.string()).describe("Step-by-step setup instructions"),
-        mainFlow: z.string().describe("Description of primary data/control flow through system"),
-    }),
     dependencies: z
         .array(z.string())
-        .describe("List of important dependencies frameworks / libraries"),
+        .describe("List of the most important dependencies frameworks / libraries")
+        .max(10),
+    furtherQuestions: z
+        .array(
+            z
+                .string()
+                .describe(
+                    "A question that you would suggest me to ask you, to gain more detailed insight about the repository.",
+                ),
+        )
+        .max(3),
 })
 
 const MESSAGE_ANALYZE_ENTIRE_REPO = `
@@ -176,50 +193,25 @@ async function summarizeRepoToTopLevel(
 
 async function extractVectorDocuments(
     repositoryDump: RepositoryDump,
-    mergedTopLevels: SummarizedFileInfo[],
-    maxTokens: number,
 ): Promise<DocumentInterface[]> {
-    const completeXml = {
-        path: "",
-        xml: mergedTopLevels.map(({ xml }) => xml).join("\n"),
-        tokens: mergedTopLevels.reduce((n, { tokens }) => n + tokens, 0),
-    }
-
-    let vectorStoreDocuments: DocumentInterface[]
-
-    if (completeXml.tokens <= maxTokens) {
-        vectorStoreDocuments = [
-            { pageContent: completeXml.xml, metadata: { path: completeXml.path } },
-        ]
-    } else {
-        const documents: DocumentInterface[] = []
-        const textSplitter = new CharacterTextSplitter({ chunkSize: 1000, chunkOverlap: 100 })
-        await repositoryDump.fileContent.mapAsync(
-            async (a, b) => [a, b],
-            async (fileInfo) => {
-                const split = await textSplitter.createDocuments(
-                    [fileInfo.content],
-                    [{ path: fileInfo.path }],
-                )
-                documents.push(...split)
-                return [fileInfo, null]
-            },
+    const documents: DocumentInterface[] = []
+    const textSplitter = new CharacterTextSplitter({ chunkSize: 1000, chunkOverlap: 200 })
+    for (const fileInfo of repositoryDump.fileContent.flatten()) {
+        const split = await textSplitter.createDocuments(
+            [fileInfo.content],
+            [{ path: fileInfo.path, fullContent: fileInfo.content }],
         )
-        vectorStoreDocuments = documents
+        documents.push(...split)
     }
-
-    return vectorStoreDocuments
+    return documents
 }
 
 export async function analyzeRepo(
     aiInterface: AiInterface,
     repositoryDump: RepositoryDump,
 ): Promise<AiRepoSummary> {
-    // TODO: exclude binary files
     const maxTokens =
         aiInterface.chatInterface.getContextWindowSize() - countTokens(MESSAGE_SUMMARIZE_PARTS)
-
-    // TODO "paths" tag
 
     const mergedTopLevelsTree = await summarizeRepoToTopLevel(
         aiInterface.chatInterface,
@@ -230,7 +222,7 @@ export async function analyzeRepo(
     const mergedTopLevels = Object.values(mergedTopLevelsTree.metaInfo).map((x) => x[0])
 
     await aiInterface.embeddingInterface?.setDocuments(
-        await extractVectorDocuments(repositoryDump, mergedTopLevels, maxTokens),
+        await extractVectorDocuments(repositoryDump),
     )
 
     // TODO: summarize top levels between each other

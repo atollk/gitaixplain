@@ -7,14 +7,18 @@
     import { onMount } from "svelte"
     import { marked } from "marked"
     import Loading from "$lib/components/util/Loading.svelte"
+    import { approximateTokens, countTokens } from "$lib/backend/util"
+    import type { RepositoryDump } from "$lib/backend/repository_dump"
 
-    const props: { aiInterface: AiInterface } = $props()
+    const props: { repositoryDump: RepositoryDump, aiInterface: AiInterface } = $props()
 
     const messages: { text: string; byUser: boolean }[] = $state([])
     let waitingForModel = $state(false)
 
-    const SYSTEM_PROMPT =
-        "Use the following context to answer questions. Be as detailed as possible, but don't make up any information that's not from the context. If you don't know an answer, say you don't know."
+    const SYSTEM_PROMPT_1 =
+        "Use the following context that is part of a git repository to answer questions. Be as detailed as possible, but don't make up any information that's not from the context."
+    const SYSTEM_PROMPT_2 =
+        "Consider the following conversation. Your job is to determine how much information you need o respond to the last user message. Simply answer with a single number from 1 to 10, where 1 is a single file and 10 is the entire repository."
 
     const submitMessage = async (
         ev?: SubmitEvent & { currentTarget: EventTarget & HTMLFormElement },
@@ -26,8 +30,19 @@
 
         waitingForModel = true
         try {
-            const context = await props.aiInterface.embeddingInterface?.getContext(userMessage)
-            const systemPrompt = `${SYSTEM_PROMPT}\n\n${context}`
+            // Find out how much context is needed.
+            const contextNeeded = parseInt(await props.aiInterface.chatInterface.getChatResponse(SYSTEM_PROMPT_2, messages))
+            console.log("contextNeeded", contextNeeded, props.repositoryDump.countFiles() * 10 / contextNeeded)
+
+            // Build the context
+            const contexts = await props.aiInterface.embeddingInterface?.getContext(userMessage, props.repositoryDump.countFiles() * 10 / contextNeeded) ?? []
+            let systemPrompt = `${SYSTEM_PROMPT_1}\n`
+            const baseTokens = countTokens(systemPrompt) + messages.map((m) => countTokens(m.text)).reduce((a, b) => a+b, 0)
+            for (const context of contexts) {
+                if (baseTokens + approximateTokens(context) >= props.aiInterface.chatInterface.getContextWindowSize())
+                    break
+                systemPrompt = systemPrompt + "\n" + context
+            }
             const response = await props.aiInterface.chatInterface.getChatResponse(
                 systemPrompt,
                 messages,

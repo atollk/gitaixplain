@@ -2,7 +2,7 @@
     import Header from "$lib/components/Header.svelte"
     import LangchainExplain from "$lib/components/LangchainExplain.svelte"
     import Loading from "$lib/components/util/Loading.svelte"
-    import { fetchRepoSummary } from "$lib/backend/repository_dump"
+    import { fetchRepoDump } from "$lib/backend/repository_dump"
     import Footer from "$lib/components/Footer.svelte"
     import { appStore } from "$lib/store.svelte"
     import { page } from "$app/state"
@@ -15,9 +15,10 @@
     let configModal: ConfigModal | undefined = $state()
     let modalResetKey = $state({})
 
-    let repoSummary = $derived.by(() => {
+    const repoDumpIgnore = /(.*\.lock)|(package-lock\.json)|(pnpm-lock\.yaml)/
+    let repoDump = $derived.by(() => {
         if (appStore.gitUrl) {
-            return fetchRepoSummary(appStore.gitUrl)
+            return fetchRepoDump(appStore.gitUrl, repoDumpIgnore)
         } else {
             return null
         }
@@ -64,16 +65,16 @@
 
     <div class="divider my-8"></div>
 
-    {#if appStore.gitUrl === undefined || repoSummary === null || appStore.aiInterface === undefined}
+    {#if appStore.gitUrl === undefined || repoDump === null || appStore.aiInterface === undefined}
         <div></div>
     {:else}
-        {#await repoSummary}
+        {#await repoDump}
             <Loading message="Loading your repository" />
         {:then repoSummary}
             <LangchainExplain
                 repoLink={appStore.gitUrl}
                 interface={appStore.aiInterface.fillImplicitly()}
-                {repoSummary}
+                repoDump={repoSummary}
             />
         {/await}
     {/if}

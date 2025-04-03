@@ -39,7 +39,11 @@ export abstract class LangchainChatInterface<
             messages.push(byUser ? new HumanMessage(text) : new AIMessage(text))
         }
 
-        console.log("getChatResponse", messages, countTokens(messages.map((m) => m.content).join("\n")))
+        console.log(
+            "getChatResponse",
+            messages,
+            countTokens(messages.map((m) => m.content).join("\n")),
+        )
         const response = await this.model!.invoke(messages)
         return response.content as string
     }

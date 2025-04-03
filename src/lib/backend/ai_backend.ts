@@ -1,6 +1,6 @@
 import type { ChatProviderName, EmbeddingProviderName } from "$lib/models"
 import type { DocumentInterface } from "@langchain/core/documents"
-import {z} from "zod"
+import { z } from "zod"
 
 export interface Graph {
     nodes: string[]

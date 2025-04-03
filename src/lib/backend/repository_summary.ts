@@ -1,6 +1,6 @@
 import { FileTree, type RepositoryDump } from "$lib/backend/repository_dump"
 import { AiChatInterface, AiInterface, type AiRepoSummary } from "$lib/backend/ai_backend"
-import { approximateTokens, countTokens, stripBackticks } from "$lib/backend/util"
+import { approximateTokens, countTokens } from "$lib/backend/util"
 import type { DocumentInterface } from "@langchain/core/documents"
 import { CharacterTextSplitter } from "@langchain/textsplitters"
 import { z } from "zod"
@@ -31,7 +31,13 @@ const STRUCTURE_ANALYZE_ENTIRE_REPO = z.object({
     componentAnalysis: z.object({
         flowGraph: z
             .object({
-                nodes: z.array(z.string().describe("Name of a single component. A component could be a class, a function, an abstract concept, or something else.")),
+                nodes: z.array(
+                    z
+                        .string()
+                        .describe(
+                            "Name of a single component. A component could be a class, a function, an abstract concept, or something else.",
+                        ),
+                ),
                 edges: z.array(
                     z.object({
                         from: z.string().describe("Component name with the outgoing connection"),
@@ -40,7 +46,9 @@ const STRUCTURE_ANALYZE_ENTIRE_REPO = z.object({
                     }),
                 ),
             })
-            .describe("A \"component analysis\", which relates the different components used in this project in a flow graph, displaying their relation and functionality together."),
+            .describe(
+                'A "component analysis", which relates the different components used in this project in a flow graph, displaying their relation and functionality together.',
+            ),
     }),
     keyFiles: z.array(
         z.object({
@@ -78,7 +86,6 @@ Ground rules:
 2. Include only information that can be confidently inferred from the repository
 3. In keyFiles, prioritize files that are essential for understanding the system architecture
 `
-
 
 async function summarizePart(
     chatAi: AiChatInterface,
@@ -227,9 +234,9 @@ export async function analyzeRepo(
     )
 
     // TODO: summarize top levels between each other
-    
+
     const useWithStructure = false
-    
+
     if (useWithStructure) {
         const responseContent = await aiInterface.chatInterface.getChatResponseWithStructure(
             MESSAGE_ANALYZE_ENTIRE_REPO,

@@ -198,7 +198,7 @@ async function extractVectorDocuments(
     const textSplitter = new CharacterTextSplitter({ chunkSize: 1000, chunkOverlap: 200 })
     for (const fileInfo of repositoryDump.fileContent.flatten()) {
         const split = await textSplitter.createDocuments(
-            [fileInfo.content],
+            [`<file=${fileInfo.path}>\n${fileInfo.content}`],
             [{ path: fileInfo.path, fullContent: fileInfo.content }],
         )
         documents.push(...split)

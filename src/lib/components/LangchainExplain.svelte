@@ -19,6 +19,7 @@
     )
     const renderGraph = (graph?: Graph) => (graph === undefined ? "" : flowGraphToMermaid(graph))
     const linkToFile = (filePath: string) => `${props.repoLink}/tree/HEAD/${filePath}`
+    let chatElement: LangchainChat | undefined = $state()
 </script>
 
 {#await modelResponse}
@@ -66,15 +67,40 @@
                                 <li>Purpose: {keyFile.purpose}</li>
                                 <li>Connections: {keyFile.connections}</li>
                                 <li>Importance: {keyFile.importance} / 10</li>
+                                <li>
+                                    <button
+                                        class="btn btn-sm btn-outline btn-info cursor-pointer"
+                                        onclick={() => {
+                                            chatElement?.suggestMessage(
+                                                `Tell me more about the file "${keyFile.path}" and its role in the repository.`,
+                                            )
+                                        }}
+                                    >
+                                        Tell me more
+                                    </button>
+                                </li>
                             </ul>
                         </li>
                     {/each}
                 </ul>
             </div>
 
-            <div>
+            <div class="mt-10 mb-2">
                 <h4 class="h4">External Dependencies</h4>
-                <p>{modelResponse?.dependencies?.join(", ")}</p>
+                <div class="flex flex-wrap gap-3">
+                    {#each modelResponse?.dependencies ?? [] as dep}
+                        <button
+                            class="btn btn-sm btn-outline btn-info cursor-pointer"
+                            onclick={() => {
+                                chatElement?.suggestMessage(
+                                    `Tell me more about the dependency "${dep}" and its role in the repository.`,
+                                )
+                            }}
+                        >
+                            {dep}
+                        </button>
+                    {/each}
+                </div>
             </div>
         </div>
 
@@ -84,14 +110,24 @@
             <h6 class="h6">Chat about the repository</h6>
         </div>
 
-        <LangchainChat aiInterface={props.interface} repositoryDump={props.repoDump} />
+        <LangchainChat
+            bind:this={chatElement}
+            aiInterface={props.interface}
+            repositoryDump={props.repoDump}
+        />
 
-        Suggested questions:
-        <ul>
+        <div class="mt-8 flex flex-col items-center gap-2">
             {#each modelResponse?.furtherQuestions ?? [] as q}
-                <li>{q}</li>
+                <button
+                    class="btn btn-outline btn-info cursor-pointer"
+                    onclick={() => {
+                        chatElement?.suggestMessage(q)
+                    }}
+                >
+                    {q}
+                </button>
             {/each}
-        </ul>
+        </div>
     </div>
 {:catch error}
     <div role="alert" class="alert alert-error block">
@@ -107,5 +143,9 @@
         <h6 class="h6">Chat about the repository</h6>
     </div>
 
-    <LangchainChat aiInterface={props.interface} repositoryDump={props.repoDump} />
+    <LangchainChat
+        bind:this={chatElement}
+        aiInterface={props.interface}
+        repositoryDump={props.repoDump}
+    />
 {/await}

@@ -115,12 +115,28 @@ export class FileTree<DirectoryInfo, FileInfo> {
 
         return new FileTree(await mapRepositoryMetaInfo(this.metaInfo))
     }
+
+    flatten() : FileInfo[] {
+        const fileInfos: FileInfo[] = []
+        this.map(
+            (directoryInfo, children) => [directoryInfo, children],
+            (fileInfo) => {
+                fileInfos.push(fileInfo)
+                return [fileInfo, null]
+            }
+        )
+        return fileInfos
+    }
 }
 
 export class RepositoryDump {
     constructor(
         readonly fileContent: FileTree<{ path: string }, { path: string; content: string }>,
     ) {}
+
+    countFiles(): number {
+        return this.fileContent.flatten().length
+    }
 
     toXmlString(): string {
         const tree: FileTree<string, string> = this.fileContent.map(
@@ -147,7 +163,7 @@ function fileIsBinary(content: Uint8Array): boolean {
     return false
 }
 
-async function fetchIsomorphicDump(url: string): Promise<RepositoryDump> {
+async function fetchIsomorphicDump(url: string, filenameIgnorePattern: RegExp): Promise<RepositoryDump> {
     // Initialize and fetch git repository.
     // @ts-expect-error LightningFS.Options.db is incorrectly required
     const fsOptions: LightningFS.Options = { wipe: true }
@@ -171,10 +187,12 @@ async function fetchIsomorphicDump(url: string): Promise<RepositoryDump> {
             const rawContent = await workdirEntry?.content()
             let content = null
             if (rawContent !== undefined && typeof rawContent === "object") {
-                if (!fileIsBinary(rawContent)) {
-                    content = textDecoder.decode(rawContent)
+                if (fileIsBinary(rawContent)) {
+                    console.log(`skipping binary file ${filename}`)
+                } else if (filenameIgnorePattern.test(filename)) {
+                    console.log(`skipping ignored file ${filename}`)
                 } else {
-                    console.log(`skipping ${filename}`)
+                    content = textDecoder.decode(rawContent)
                 }
             }
             return { filename, content }
@@ -193,7 +211,6 @@ async function fetchIsomorphicDump(url: string): Promise<RepositoryDump> {
     return new RepositoryDump(tree)
 }
 
-export async function fetchRepoSummary(url: string): Promise<RepositoryDump> {
-    // return Promise.resolve(new DOMParser().parseFromString("<foo></foo>", "application/xml"))
-    return await fetchIsomorphicDump(url)
+export async function fetchRepoDump(url: string, filenameIgnorePattern: RegExp): Promise<RepositoryDump> {
+    return await fetchIsomorphicDump(url, filenameIgnorePattern)
 }

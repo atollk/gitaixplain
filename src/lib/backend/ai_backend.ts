@@ -1,5 +1,6 @@
 import type { ChatProviderName, EmbeddingProviderName } from "$lib/models"
 import type { DocumentInterface } from "@langchain/core/documents"
+import { z } from "zod"
 
 export interface Graph {
     nodes: string[]
@@ -8,22 +9,18 @@ export interface Graph {
 
 export interface AiRepoSummary {
     summary?: {
-        purpose?: string
+        purpose?: string,
+        mainFlow: string,
     }
-    componentAnalysis?: {
-        flowGraph?: Graph
-    }
+    componentFlowGraph?: Graph
     keyFiles?: {
         path?: string
         purpose?: string
-        importance?: string
+        importance?: number
         connections?: string[]
     }[]
-    usagePaths?: {
-        setup?: string[]
-        mainFlow?: string
-    }
     dependencies?: string[]
+    furtherQuestions?: string[]
 }
 
 export abstract class AiChatInterface {
@@ -37,6 +34,12 @@ export abstract class AiChatInterface {
         chat: { text: string; byUser: boolean }[],
     ): Promise<string>
 
+    abstract getChatResponseWithStructure<T extends z.ZodObject<U>, U extends z.ZodRawShape>(
+        systemMessage: string,
+        chat: { text: string; byUser: boolean }[],
+        structure: T,
+    ): Promise<z.infer<T>>
+
     abstract providesEmbeddings(): boolean
     abstract getEmbeddingProvider(): AiEmbeddingInterface
 
@@ -47,7 +50,7 @@ export abstract class AiEmbeddingInterface {
     abstract get name(): EmbeddingProviderName
     abstract get config(): Record<string, unknown>
 
-    abstract getContext(query: string): Promise<string>
+    abstract getContext(query: string, maxK: number): Promise<string[]>
 
     abstract setDocuments(documents: DocumentInterface[]): Promise<void>
 

@@ -7,14 +7,18 @@
     import { onMount } from "svelte"
     import { marked } from "marked"
     import Loading from "$lib/components/util/Loading.svelte"
+    import { approximateTokens } from "$lib/backend/util"
+    import type { RepositoryDump } from "$lib/backend/repository_dump"
 
-    const props: { aiInterface: AiInterface } = $props()
+    const props: { repositoryDump: RepositoryDump, aiInterface: AiInterface } = $props()
 
     const messages: { text: string; byUser: boolean }[] = $state([])
     let waitingForModel = $state(false)
 
     const SYSTEM_PROMPT =
-        "Use the following context to answer questions. Be as detailed as possible, but don't make up any information that's not from the context. If you don't know an answer, say you don't know."
+        `Your role is that of an assistant to understand a software project.
+Use the following context that is part of a git repository to answer questions.
+Be as detailed as possible, but don't make up any information that's not from the context.`
 
     const submitMessage = async (
         ev?: SubmitEvent & { currentTarget: EventTarget & HTMLFormElement },
@@ -26,8 +30,14 @@
 
         waitingForModel = true
         try {
-            const context = await props.aiInterface.embeddingInterface?.getContext(userMessage)
-            const systemPrompt = `${SYSTEM_PROMPT}\n\n${context}`
+            const contexts = await props.aiInterface.embeddingInterface?.getContext(userMessage, 40) ?? []
+            let systemPrompt = `${SYSTEM_PROMPT}\n`
+            const baseTokens = approximateTokens(systemPrompt) + messages.map((m) => approximateTokens(m.text)).reduce((a, b) => a + b, 0)
+            for (const context of contexts) {
+                if (baseTokens + approximateTokens(context) >= props.aiInterface.chatInterface.getContextWindowSize())
+                    break
+                systemPrompt = systemPrompt + "\n" + context
+            }
             const response = await props.aiInterface.chatInterface.getChatResponse(
                 systemPrompt,
                 messages,
@@ -65,9 +75,17 @@
         })
         return () => editor?.destroy()
     })
+
+    export function suggestMessage(message: string): void {
+        if (!editor) {
+            throw new Error("Chat message field not found")
+        }
+        editor.commands.setContent(message)
+        editor.commands.focus("end")
+    }
 </script>
 
-<div class="flex w-4/5 flex-col">
+<div class="flex w-4/5 flex-col mb-4">
     {#each messages as message}
         <div class={["chat", message.byUser ? "chat-end" : "chat-start"]}>
             <div
@@ -102,8 +120,8 @@
             ></div>
             <button
                 type="submit"
-                class="border-primary absolute right-3 h-6 w-6 rounded-full border-2 border-solid text-sm"
-                >🡲
+                class="border-primary absolute right-3 h-6 w-6 rounded-full border-2 border-solid text-sm cursor-pointer"
+            >🡲
             </button>
         </div>
     </form>

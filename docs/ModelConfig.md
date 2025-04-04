@@ -4,10 +4,21 @@ First, you need to choose the model family or API provider to use with Gitaixpla
 There are two categories: AI as a service, such as Gemini or Groq; and a local AI, such as Ollama.
 After picking one of these providers, you can configure it in more detail.
 
+Second, you have the option to choose an embedding provider, which is mainly important to use the chat feature of Gitaixplain.
+For some AI providers from the first step, they already offer embedding models and this step is optional.
+For others, only chat models are available, and you have to select a different embedding provider to properly use the chat.
+The UI will display warning if this part of the configuration is not correct.
+
 ## AI as a service
 
 Most LLMs in use nowadays are hosted by service providers such as Microsoft, Google, or OpenAI.
 You use them by making network requests to their API.
+
+#### Anthropic
+
+Anthropic currently has restrictions in place as to how their API can be used. 
+If you receive an error message about CORS being blocked, you need to create a team-organization in the Anthropic console. 
+Personal organizations are not supported, unfortunately.
 
 ### API Key
 
